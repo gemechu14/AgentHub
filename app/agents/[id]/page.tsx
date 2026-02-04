@@ -59,31 +59,28 @@ export default function TestAgentPage() {
 
         {/* API Key Expired Alert (only for draft/expired agents) */}
         {isDraft && hasApiKeyExpired && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 flex-shrink-0 mt-0.5">
-              <svg
-                className="h-3 w-3 text-yellow-600"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex h-5 w-5 items-center justify-center rounded-full border border-amber-700 flex-shrink-0 mt-0.5">
+                <span className="text-amber-700 text-xs font-bold">!</span>
+              </div>
+              <div className="flex-grow">
+                <h3 className="text-sm font-bold text-amber-900">
+                  API Key Expired
+                </h3>
+              </div>
+            </div>
+            <p className="text-sm text-amber-900 mb-3 ml-8">
+              Your API key has expired. Please update it to continue using this agent.
+            </p>
+            <div className="ml-8">
+              <Link
+                href={`/agents/${agent.id}/edit`}
+                className="inline-block rounded-lg border border-yellow-200 bg-white px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-yellow-50 transition-colors"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
+                Update API Key
+              </Link>
             </div>
-            <div className="flex-grow">
-              <h3 className="text-sm font-semibold text-yellow-900">
-                API Key Expired
-              </h3>
-              <p className="text-sm text-yellow-800 mt-1">
-                Your API key has expired. Please update it to continue using this agent.
-              </p>
-            </div>
-            <button className="rounded-lg border border-yellow-300 bg-white px-4 py-2 text-sm font-semibold text-yellow-900 shadow-sm hover:bg-yellow-50 transition-colors flex-shrink-0">
-              Update API Key
-            </button>
           </div>
         )}
 
