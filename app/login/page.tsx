@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -28,22 +29,18 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 mb-3">
-              <svg
-                className="w-10 h-10 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            <div className="relative group">
+              <span className="flex shrink-0 overflow-hidden rounded-full relative h-20 w-20 sm:h-24 sm:w-24 shadow-lg ring-4 ring-white/50 group-hover:shadow-xl transition-all duration-300">
+                <Image
+                  className="aspect-square h-full w-full object-cover"
+                  alt="AgentHub logo"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/697fed6a60109d8329e45868/798c5ea8d_logo.png"
+                  width={96}
+                  height={96}
+                  unoptimized
                 />
-              </svg>
+              </span>
             </div>
-            <p className="text-sm font-semibold text-slate-700">NEOIA</p>
           </div>
 
           {/* Title */}
@@ -143,7 +140,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
@@ -153,14 +150,14 @@ export default function LoginPage() {
           <div className="mt-6 flex items-center justify-between text-sm">
             <Link
               href="/forgot-password"
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-slate-900 hover:text-slate-700 font-medium"
             >
               Forgot password?
             </Link>
             <div className="text-slate-500">
               Need an account?{" "}
-              <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                Sign up
+              <Link href="/signup" className="text-slate-900 hover:text-slate-700 font-medium">
+                Create account
               </Link>
             </div>
           </div>

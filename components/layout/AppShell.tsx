@@ -60,10 +60,11 @@ export function AppShell({
     if (isProfileMenuOpen && profileButtonRef.current) {
       const rect = profileButtonRef.current.getBoundingClientRect();
       // Calculate dropdown height (approximately 120px) and position it above the button
-      // Position it so the button remains visible below the dropdown
+      // Position it higher so the button remains visible below the dropdown
       const dropdownHeight = 120;
+      const buttonHeight = 40; // Approximate button height
       setDropdownPosition({
-        top: rect.top - dropdownHeight - 8, // Position above with 8px gap, button will be visible below
+        top: rect.top - dropdownHeight - buttonHeight - 12, // Position higher with more gap
         left: isCollapsed ? rect.left : rect.left,
       });
     }
@@ -398,7 +399,7 @@ export function AppShell({
             onClick={() => setIsProfileMenuOpen(false)}
           />
           <div
-            className="fixed w-64 rounded-lg border border-slate-700 bg-[#1e293b] shadow-2xl z-50"
+            className="fixed w-56 rounded-lg border border-slate-700 bg-[#1e293b] shadow-2xl z-50"
             style={{
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
