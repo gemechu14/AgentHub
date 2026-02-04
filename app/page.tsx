@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/common/Card";
 import { CardSkeleton } from "@/components/common/CardSkeleton";
@@ -23,10 +24,13 @@ export default function Home() {
           <p className="text-sm text-slate-500">
             Monitor your agents and performance
           </p>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-400">
-            <span className="text-lg leading-none">+</span>
-            <span>Add Agent</span>
-          </button>
+              <Link
+                href="/agents/new"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 transition-colors"
+              >
+                <span className="text-lg leading-none">+</span>
+                <span>Add Agent</span>
+              </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -74,7 +78,7 @@ export default function Home() {
               </p>
               <p className="mt-2 text-2xl font-bold text-slate-900">119.3K</p>
               <p className="mt-1 text-xs font-medium text-emerald-600">
-                ↑ 8% from last month
+                  ↑ 8% from last month
               </p>
             </div>
           </Card>

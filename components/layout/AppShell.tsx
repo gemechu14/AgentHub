@@ -1,10 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { APP_NAME } from "@/lib/config";
 
 interface AppShellProps {
@@ -46,10 +47,27 @@ export function AppShell({
   children,
   title = "Dashboard",
 }: AppShellProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const [agentsOpen, setAgentsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (isProfileMenuOpen && profileButtonRef.current) {
+      const rect = profileButtonRef.current.getBoundingClientRect();
+      // Calculate dropdown height (approximately 120px) and position it above the button
+      // Position it so the button remains visible below the dropdown
+      const dropdownHeight = 120;
+      setDropdownPosition({
+        top: rect.top - dropdownHeight - 8, // Position above with 8px gap, button will be visible below
+        left: isCollapsed ? rect.left : rect.left,
+      });
+    }
+  }, [isProfileMenuOpen, isCollapsed]);
 
   return (
     <div className="h-screen bg-slate-100 overflow-hidden">
@@ -144,29 +162,29 @@ export function AppShell({
                       My Agents
                     </div>
                     <div className="mt-2 space-y-1 pl-1">
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300">
+                      <Link href="/agents/1" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         <span className="truncate">CRE Chatbot</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400">
+                      </Link>
+                      <Link href="/agents/4" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-slate-600" />
                         <span className="truncate">Data Analyst</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300">
+                      </Link>
+                      <Link href="/agents/6" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         <span className="truncate">Sales Assistant</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300">
+                      </Link>
+                      <Link href="/agents/2" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         <span className="truncate">Customer Support Bot</span>
-                      </div>
+                      </Link>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="mt-auto p-2 border-t border-slate-800/50 space-y-1">
+            <div className="mt-auto p-2 border-t border-slate-800/50 space-y-1 overflow-visible">
               <NavItem
                 href="/settings"
                 label="Settings"
@@ -174,17 +192,22 @@ export function AppShell({
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={isCollapsed}
               />
-              <div
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white ${
-                  isCollapsed ? "justify-center" : ""
-                }`}
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white flex-shrink-0">
-                  GB
-                </div>
-                {!isCollapsed && (
-                  <span className="truncate text-sm">Gemechu Bulti</span>
-                )}
+              <div className="relative overflow-visible">
+                <button
+                  ref={profileButtonRef}
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white ${
+                    isCollapsed ? "justify-center" : ""
+                  }`}
+                >
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white flex-shrink-0">
+                    GB
+                  </div>
+                  {!isCollapsed && (
+                    <span className="truncate text-sm">Gemechu Bulti</span>
+                  )}
+                </button>
+
               </div>
             </div>
           </nav>
@@ -227,52 +250,54 @@ export function AppShell({
               </div>
 
               <div>
-                <NavItem
-                  href="/agents"
-                  label="Agents"
-                  icon={<Bot className="w-5 h-5" />}
-                  isActive={pathname.startsWith("/agents")}
-                  isCollapsed={false}
-                />
-                <button
-                  type="button"
-                  onClick={() => setAgentsOpen((open) => !open)}
-                  className="flex w-full items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
-                >
-                  <div className="flex items-center gap-3">
-                    <Bot className="w-5 h-5 flex-shrink-0" />
-                    <span className="truncate">AGENTS</span>
-                  </div>
-                  <span
-                    className={`text-slate-600 transition-transform ${
-                      agentsOpen ? "rotate-0" : "-rotate-90"
-                    }`}
+                <div className="relative">
+                  <NavItem
+                    href="/agents"
+                    label="Agents"
+                    icon={<Bot className="w-5 h-5" />}
+                    isActive={pathname.startsWith("/agents")}
+                    isCollapsed={false}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setAgentsOpen((open) => !open);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-transform"
                   >
-                    ▾
-                  </span>
-                </button>
+                    <span
+                      className={`transition-transform ${
+                        agentsOpen ? "rotate-0" : "-rotate-90"
+                      }`}
+                    >
+                      ▾
+                    </span>
+                  </button>
+                </div>
                 {agentsOpen && (
                   <div className="mt-2 space-y-1 pl-1">
                     <div className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-600">
                       My Agents
                     </div>
                     <div className="mt-2 space-y-1 pl-1">
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300">
+                      <Link href="/agents/1" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         <span className="truncate">CRE Chatbot</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400">
+                      </Link>
+                      <Link href="/agents/4" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-slate-600" />
                         <span className="truncate">Data Analyst</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300">
+                      </Link>
+                      <Link href="/agents/6" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         <span className="truncate">Sales Assistant</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300">
+                      </Link>
+                      <Link href="/agents/2" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                         <span className="truncate">Customer Support Bot</span>
-                      </div>
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -287,11 +312,57 @@ export function AppShell({
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={false}
               />
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white flex-shrink-0">
-                  GB
-                </div>
-                <span className="truncate text-sm">Gemechu Bulti</span>
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+                >
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white flex-shrink-0">
+                    GB
+                  </div>
+                  <span className="truncate text-sm">Gemechu Bulti</span>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    />
+                    <div className="absolute bottom-full left-0 mb-2 w-64 rounded-lg border border-slate-700 bg-[#1e293b] shadow-xl z-20">
+                      {/* User Info */}
+                      <div className="px-4 py-3 border-b border-slate-700">
+                        <p className="text-sm font-semibold text-white">Gemechu Bulti</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          gemechubulti11@gmail.com
+                        </p>
+                      </div>
+
+                      {/* Menu Options */}
+                      <div className="py-1">
+                        <Link
+                          href="/settings"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-slate-700/50 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          <span>Profile</span>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            router.push("/login");
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700/50 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Log out</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </nav>
@@ -318,6 +389,58 @@ export function AppShell({
           </div>
         </main>
       </div>
+
+      {/* Profile Dropdown Menu - Popover Card */}
+      {isProfileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsProfileMenuOpen(false)}
+          />
+          <div
+            className="fixed w-64 rounded-lg border border-slate-700 bg-[#1e293b] shadow-2xl z-50"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+            }}
+          >
+            {/* Popover Arrow */}
+            <div
+              className="absolute -bottom-2 left-6 w-4 h-4 rotate-45 border-r border-b border-slate-700 bg-[#1e293b]"
+            />
+
+            {/* User Info */}
+            <div className="px-4 py-3 border-b border-slate-700">
+              <p className="text-sm font-semibold text-white">Gemechu Bulti</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                gemechubulti11@gmail.com
+              </p>
+            </div>
+
+            {/* Menu Options */}
+            <div className="py-1">
+              <Link
+                href="/settings"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-slate-700/50 transition-colors rounded-md mx-1"
+              >
+                <User className="w-4 h-4" />
+                <span>Profile</span>
+              </Link>
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700/50 transition-colors rounded-md mx-1"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log out</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
