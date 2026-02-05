@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "gemechubulti13341@gmail.com";
@@ -113,7 +113,7 @@ export default function VerifyEmailPage() {
               {code.map((digit, index) => (
                 <input
                   key={index}
-                  ref={(el) => (inputRefs.current[index] = el)}
+                  ref={(el) => { inputRefs.current[index] = el; }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -154,6 +154,32 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                  <ShieldCheck className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                Verify your email
+              </h1>
+              <p className="text-sm text-slate-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailForm />
+    </Suspense>
   );
 }
 
