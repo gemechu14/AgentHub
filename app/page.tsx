@@ -82,7 +82,7 @@ export default function Home() {
               </p>
             </div>
           </Card>
-
+            
           <Card>
             <div className="relative">
               <div className="absolute top-0 right-0 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
