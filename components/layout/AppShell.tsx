@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { APP_NAME } from "@/lib/config";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppShellProps {
   children: ReactNode;
@@ -43,18 +44,42 @@ function NavItem({
   );
 }
 
+/**
+ * Get user initials from name
+ */
+function getUserInitials(user: { first_name: string; last_name: string } | null): string {
+  if (!user) return "U";
+  const first = user.first_name?.charAt(0).toUpperCase() || "";
+  const last = user.last_name?.charAt(0).toUpperCase() || "";
+  return first + last || "U";
+}
+
+/**
+ * Get user full name
+ */
+function getUserFullName(user: { first_name: string; last_name: string } | null): string {
+  if (!user) return "User";
+  return `${user.first_name || ""} ${user.last_name || ""}`.trim() || "User";
+}
+
 export function AppShell({
   children,
   title = "Dashboard",
 }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, logout, isLoading: authLoading } = useAuth();
   const [agentsOpen, setAgentsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  // Get user display data
+  const userInitials = getUserInitials(user);
+  const userFullName = getUserFullName(user);
+  const userEmail = user?.email || "";
 
   useEffect(() => {
     if (isProfileMenuOpen && profileButtonRef.current) {
@@ -121,10 +146,10 @@ export function AppShell({
           <nav className="flex flex-1 flex-col overflow-y-auto py-4 px-2">
             <div className="flex-grow space-y-1">
               <NavItem
-                href="/"
+                href="/dashboard"
                 label="Dashboard"
                 icon={<LayoutDashboard className="w-5 h-5" />}
-                isActive={pathname === "/"}
+                isActive={pathname === "/dashboard"}
                 isCollapsed={isCollapsed}
               />
 
@@ -202,10 +227,12 @@ export function AppShell({
                   }`}
                 >
                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white flex-shrink-0">
-                    GB
+                    {authLoading ? "..." : userInitials}
                   </div>
                   {!isCollapsed && (
-                    <span className="truncate text-sm">Gemechu Bulti</span>
+                    <span className="truncate text-sm">
+                      {authLoading ? "Loading..." : userFullName}
+                    </span>
                   )}
                 </button>
 
@@ -242,10 +269,10 @@ export function AppShell({
             <div className="flex-grow space-y-6">
               <div>
                 <NavItem
-                  href="/"
+                  href="/dashboard"
                   label="Dashboard"
                   icon={<LayoutDashboard className="w-5 h-5" />}
-                  isActive={pathname === "/"}
+                  isActive={pathname === "/dashboard"}
                   isCollapsed={false}
                 />
               </div>
@@ -319,9 +346,11 @@ export function AppShell({
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
                 >
                   <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white flex-shrink-0">
-                    GB
+                    {authLoading ? "..." : userInitials}
                   </div>
-                  <span className="truncate text-sm">Gemechu Bulti</span>
+                  <span className="truncate text-sm">
+                    {authLoading ? "Loading..." : userFullName}
+                  </span>
                 </button>
 
                 {/* Profile Dropdown Menu */}
@@ -334,9 +363,11 @@ export function AppShell({
                     <div className="absolute bottom-full left-0 mb-2 w-64 rounded-lg border border-slate-700 bg-[#1e293b] shadow-xl z-20">
                       {/* User Info */}
                       <div className="px-4 py-3 border-b border-slate-700">
-                        <p className="text-sm font-semibold text-white">Gemechu Bulti</p>
+                        <p className="text-sm font-semibold text-white">
+                          {authLoading ? "Loading..." : userFullName}
+                        </p>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          gemechubulti11@gmail.com
+                          {authLoading ? "..." : userEmail}
                         </p>
                       </div>
 
@@ -353,7 +384,7 @@ export function AppShell({
                         <button
                           onClick={() => {
                             setIsProfileMenuOpen(false);
-                            router.push("/login");
+                            logout();
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700/50 transition-colors"
                         >
@@ -412,9 +443,11 @@ export function AppShell({
 
             {/* User Info */}
             <div className="px-4 py-3 border-b border-slate-700">
-              <p className="text-sm font-semibold text-white">Gemechu Bulti</p>
+              <p className="text-sm font-semibold text-white">
+                {authLoading ? "Loading..." : userFullName}
+              </p>
               <p className="text-xs text-slate-400 mt-0.5">
-                gemechubulti11@gmail.com
+                {authLoading ? "..." : userEmail}
               </p>
             </div>
 
@@ -431,7 +464,7 @@ export function AppShell({
               <button
                 onClick={() => {
                   setIsProfileMenuOpen(false);
-                  router.push("/login");
+                  logout();
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700/50 transition-colors rounded-md mx-1"
               >

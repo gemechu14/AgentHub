@@ -1,6 +1,7 @@
 export const APP_NAME = "AgentHub";
 
-const FALLBACK_BASE_API_URL = "/api/mock";
+// Backend API base URL - defaults to local backend server
+const FALLBACK_BASE_API_URL = "http://localhost:8000";
 
 export const BASE_API_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? FALLBACK_BASE_API_URL;

@@ -3,25 +3,26 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, CheckCircle, AlertCircle } from "lucide-react";
+import { ShieldCheck, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { authService } from "@/services/authService";
 
-function VerifyEmailForm() {
+function VerifyEmailHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
   const token = searchParams.get("token") || "";
-  
-  const [isVerifying, setIsVerifying] = useState(!!token);
+
+  const [isVerifying, setIsVerifying] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Auto-verify if token is present in URL
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token) return;
+      if (!token) {
+        setError("Invalid verification link - missing token");
+        setIsVerifying(false);
+        return;
+      }
 
-      setIsVerifying(true);
       try {
         await authService.verifyEmail(token);
         setSuccess(true);
@@ -31,7 +32,7 @@ function VerifyEmailForm() {
         }, 2000);
       } catch (err) {
         console.error("Verification error:", err);
-        const errorMessage = err instanceof Error ? err.message : "Verification failed";
+        const errorMessage = err instanceof Error ? err.message : "Email verification failed";
         setError(errorMessage);
       } finally {
         setIsVerifying(false);
@@ -89,13 +90,11 @@ function VerifyEmailForm() {
     );
   }
 
-  // Show waiting for verification state
+  // Show error state
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Verify Email Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
-          {/* Back to Sign In Link */}
           <Link
             href="/login"
             className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-6"
@@ -104,39 +103,36 @@ function VerifyEmailForm() {
             <span>Back to sign in</span>
           </Link>
 
-          {/* Icon */}
           <div className="flex justify-center mb-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
-              <ShieldCheck className="h-8 w-8 text-blue-600" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+              <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
           </div>
 
-          {/* Title */}
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-              Verify your email
+              Verification Failed
             </h1>
-            <p className="text-sm text-slate-600">
-              We&apos;ve sent a verification link to{" "}
-              {email && <span className="font-semibold text-slate-900">{email}</span>}
-            </p>
-            <p className="text-sm text-slate-600 mt-2">
-              Please check your email and click the verification link.
+            <p className="text-sm text-slate-600 mb-4">{error}</p>
+            <p className="text-xs text-slate-500">
+              The verification link may have expired or is invalid.
             </p>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mt-6 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {/* Helper Text */}
-          <p className="mt-6 text-center text-xs text-slate-500">
-            Make sure to check your spam folder if you don&apos;t see the email.
-          </p>
+          <div className="mt-6 space-y-3">
+            <Link
+              href="/login"
+              className="block w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors text-center"
+            >
+              Go to Login
+            </Link>
+            <Link
+              href="/forgot-password"
+              className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition-colors text-center"
+            >
+              Request New Verification Email
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -149,23 +145,24 @@ export default function VerifyEmailPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
-            <div className="text-center">
-              <div className="flex justify-center mb-6">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
-                  <ShieldCheck className="h-8 w-8 text-blue-600" />
-                </div>
+            <div className="flex justify-center mb-6">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                <ShieldCheck className="h-8 w-8 text-blue-600 animate-pulse" />
               </div>
+            </div>
+            <div className="text-center">
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-                Verify your email
+                Loading...
               </h1>
-              <p className="text-sm text-slate-600">Loading...</p>
+              <p className="text-sm text-slate-600">Please wait...</p>
             </div>
           </div>
         </div>
       </div>
     }>
-      <VerifyEmailForm />
+      <VerifyEmailHandler />
     </Suspense>
   );
 }
+
 
