@@ -177,3 +177,6 @@ GOOGLE_REDIRECT_URI = "http://localhost:3000/oauth/google/callback"
 **The frontend is ready! Just fix the backend typo and you're good to go!** 🎉
 
 
+
+
+

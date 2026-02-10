@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,9 +35,16 @@ function isPasswordValid(validation: PasswordValidation): boolean {
   return validation.minLength && validation.hasLetter && validation.hasNumber && validation.hasSpecialChar;
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signup } = useAuth();
+  
+  // Extract URL parameters
+  const inviteParam = searchParams.get("invite") || undefined;
+  const invitedEmail = searchParams.get("email") || undefined;
+  const hasInvite = !!inviteParam;
+  
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -54,6 +61,13 @@ export default function SignupPage() {
     confirmPassword?: string;
     general?: string;
   }>({});
+
+  // Pre-fill email from URL parameter
+  useEffect(() => {
+    if (invitedEmail && email === "") {
+      setEmail(invitedEmail);
+    }
+  }, [invitedEmail, email]);
 
   // Live password validation
   const passwordValidation = useMemo(() => validatePassword(password), [password]);
@@ -108,7 +122,8 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      await signup(email, password, firstName, lastName);
+      // Include invite token in signup payload if it exists
+      await signup(email, password, firstName, lastName, inviteParam);
       // Redirect to verify email page with email parameter
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
@@ -125,14 +140,16 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Signup Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10">
-          {/* Back to Sign In Link */}
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to sign in</span>
-          </Link>
+          {/* Back to Sign In Link - Hide when invite token exists */}
+          {!hasInvite && (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-6"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to sign in</span>
+            </Link>
+          )}
 
           {/* Title */}
           <div className="mb-8">
@@ -228,20 +245,30 @@ export default function SignupPage() {
                   type="email"
                   value={email}
                   onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (fieldErrors.email) {
-                      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                    if (!hasInvite) {
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) {
+                        setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                      }
                     }
                   }}
                   placeholder="you@example.com"
                   required
-                  className={`w-full rounded-lg border bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
-                    fieldErrors.email
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                      : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  readOnly={hasInvite}
+                  className={`w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
+                    hasInvite
+                      ? "bg-slate-50 text-slate-500 cursor-not-allowed border-slate-300"
+                      : fieldErrors.email
+                      ? "bg-white text-slate-900 border-red-300 focus:border-red-500 focus:ring-red-500"
+                      : "bg-white text-slate-900 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   }`}
                 />
               </div>
+              {hasInvite && (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Email pre-filled from invitation and locked.
+                </p>
+              )}
               {fieldErrors.email && (
                 <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
@@ -382,16 +409,39 @@ export default function SignupPage() {
             </button>
           </form>
 
-          {/* Footer Link */}
-          <div className="mt-6 text-center text-sm text-slate-500">
-            Already have an account?{" "}
-            <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium">
-              Sign in
-            </Link>
-          </div>
+          {/* Footer Link - Hide when invite token exists */}
+          {!hasInvite && (
+            <div className="mt-6 text-center text-sm text-slate-500">
+              Already have an account?{" "}
+              <Link href="/login" className="text-slate-900 hover:text-slate-700 font-medium">
+                Sign in
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+            <p className="mt-4 text-slate-600 text-sm">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+
+
+
 

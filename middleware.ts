@@ -7,6 +7,7 @@ const publicRoutes = [
   '/signup',
   '/forgot-password',
   '/reset-password',
+  '/auth/password/reset', // Backend redirect route for password reset
   '/verify-email',
   '/auth/verify',
   '/oauth/google/callback',
@@ -62,5 +63,8 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
+
+
+
 
 

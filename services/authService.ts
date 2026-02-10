@@ -4,6 +4,7 @@ import {
   ResendVerificationRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  ChangeNameRequest,
   AuthTokenResponse,
   SuccessResponse,
   VerifyEmailResponse,
@@ -99,6 +100,7 @@ class AuthService {
   /**
    * Get user profile from /auth/me endpoint
    * Automatically handles token refresh on 401 errors
+   * Redirects to login if token refresh fails
    * Returns null on error instead of throwing
    */
   async getProfile(): Promise<User | null> {
@@ -121,16 +123,23 @@ class AuthService {
           });
 
           if (!retryResponse.ok) {
-            // Refresh failed or retry failed - clear tokens
+            // Refresh failed or retry failed - clear tokens and redirect
             this.clearTokens();
+            if (typeof window !== "undefined") {
+              window.location.replace("/login?session_expired=true");
+            }
             return null;
           }
 
           return retryResponse.json();
         } catch (refreshError) {
-          // Token refresh failed - clear tokens and return null
+          // Token refresh failed - clear tokens and redirect
+          // Note: refreshAccessToken already redirects, but we ensure it here too
           console.error("Token refresh failed:", refreshError);
           this.clearTokens();
+          if (typeof window !== "undefined") {
+            window.location.replace("/login?session_expired=true");
+          }
           return null;
         }
       }
@@ -138,12 +147,25 @@ class AuthService {
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         console.error("Failed to fetch profile:", error);
+        // If it's a 401 or 403, redirect to login
+        if (response.status === 401 || response.status === 403) {
+          this.clearTokens();
+          if (typeof window !== "undefined") {
+            window.location.replace("/login?session_expired=true");
+          }
+        }
         return null;
       }
 
       return response.json();
     } catch (error) {
       console.error("Error fetching profile:", error);
+      // On network errors or other failures, check if we should redirect
+      // Only redirect if we have tokens (meaning they might be invalid)
+      if (this.getAccessToken() && typeof window !== "undefined") {
+        this.clearTokens();
+        window.location.replace("/login?session_expired=true");
+      }
       return null;
     }
   }
@@ -164,6 +186,11 @@ class AuthService {
   async refreshAccessToken(): Promise<AuthTokenResponse> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
+      this.clearTokens();
+      // Redirect to login if no refresh token
+      if (typeof window !== "undefined") {
+        window.location.replace("/login?session_expired=true");
+      }
       throw new Error("No refresh token available");
     }
 
@@ -176,7 +203,11 @@ class AuthService {
     });
 
     if (!response.ok) {
+      // Token refresh failed - clear tokens and redirect to login
       this.clearTokens();
+      if (typeof window !== "undefined") {
+        window.location.replace("/login?session_expired=true");
+      }
       throw new Error("Token refresh failed");
     }
 
@@ -250,6 +281,22 @@ class AuthService {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.detail || error.message || "Failed to reset password");
+    }
+
+    return response.json();
+  }
+
+  // Change Name (Update First Name and/or Last Name)
+  async changeName(data: ChangeNameRequest): Promise<SuccessResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/change-name`, {
+      method: "POST",
+      headers: this.getHeaders(true), // Requires authentication
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || error.message || "Failed to update name");
     }
 
     return response.json();

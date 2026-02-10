@@ -25,6 +25,11 @@ export interface ResetPasswordRequest {
   new_password: string;
 }
 
+export interface ChangeNameRequest {
+  first_name?: string;
+  last_name?: string;
+}
+
 // Auth Response Types
 export interface AuthTokenResponse {
   access_token: string;
@@ -48,8 +53,14 @@ export interface GoogleAuthStartResponse {
 
 // User Types
 export interface UserMembership {
-  workspace_id: string;
-  workspace_name: string;
+  workspace_id?: string;
+  workspace_name?: string;
+  account_id?: string; // Alternative to workspace_id
+  account_name?: string; // Alternative to workspace_name
+  account?: {
+    id: string;
+    name?: string;
+  };
   role: string;
   joined_at: string;
 }

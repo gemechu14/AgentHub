@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { User, Users, Mail, Palette } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { ProfileTab } from "./ProfileTab";
 import { MembersTab } from "./MembersTab";
 import { InvitationsTab } from "./InvitationsTab";
@@ -10,20 +11,50 @@ import { ThemeTab } from "./ThemeTab";
 type TabType = "profile" | "members" | "invitations" | "theme";
 
 export function SettingsTabs() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("profile");
 
-  const tabs = [
-    { id: "profile", label: "Profile", icon: User },
-    { id: "members", label: "Members", icon: Users },
-    { id: "invitations", label: "Invitations", icon: Mail },
-    { id: "theme", label: "Theme", icon: Palette },
-  ] as const;
+  // Get user's role from memberships
+  const userRole = useMemo(() => {
+    if (!user || !user.memberships || user.memberships.length === 0) {
+      return null;
+    }
+    return user.memberships[0]?.role?.toUpperCase() || null;
+  }, [user]);
+
+  // Check if user is MEMBER role
+  const isMember = userRole === "MEMBER";
+
+  // Filter tabs based on role
+  const availableTabs = useMemo(() => {
+    const allTabs = [
+      { id: "profile" as const, label: "Profile", icon: User },
+      { id: "members" as const, label: "Members", icon: Users },
+      { id: "invitations" as const, label: "Invitations", icon: Mail },
+      { id: "theme" as const, label: "Theme", icon: Palette },
+    ];
+
+    // If user is MEMBER, only show Profile tab
+    if (isMember) {
+      return allTabs.filter((tab) => tab.id === "profile");
+    }
+
+    // For ADMIN/OWNER, show all tabs
+    return allTabs;
+  }, [isMember]);
+
+  // Ensure activeTab is valid for user's role
+  useEffect(() => {
+    if (isMember && activeTab !== "profile") {
+      setActiveTab("profile");
+    }
+  }, [isMember, activeTab]);
 
   return (
     <div className="space-y-6">
       {/* Tabs Navigation */}
       <div className="flex gap-6 border-b border-slate-200 -mb-[1px]">
-        {tabs.map((tab) => {
+        {availableTabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
@@ -45,9 +76,9 @@ export function SettingsTabs() {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === "profile" && <ProfileTab />}
-        {activeTab === "members" && <MembersTab />}
-        {activeTab === "invitations" && <InvitationsTab />}
-        {activeTab === "theme" && <ThemeTab />}
+        {activeTab === "members" && !isMember && <MembersTab />}
+        {activeTab === "invitations" && !isMember && <InvitationsTab />}
+        {activeTab === "theme" && !isMember && <ThemeTab />}
       </div>
     </div>
   );

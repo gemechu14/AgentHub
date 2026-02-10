@@ -21,7 +21,7 @@ export default function DashboardPage() {
     <AppShell title="Dashboard" subtitle="Monitor your agents and performance">
       <section className="space-y-8">
         <div className="flex items-center justify-between pb-5">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-neutral-900 text-black font-semibold ">
             Monitor your agents and performance
           </p>
               <Link
@@ -111,5 +111,8 @@ export default function DashboardPage() {
     </AppShell>
   );
 }
+
+
+
 
 

@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Refresh user profile from /auth/me endpoint
    * Automatically handles token refresh on 401 errors
    * Updates state with profile data or null on failure
+   * Redirects to login if tokens are invalid/expired
    */
   const refreshProfile = useCallback(async () => {
     try {
@@ -46,6 +47,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setAccessToken(null);
         setRefreshToken(null);
+        // Redirect to login if not already there
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.replace("/login");
+        }
         return;
       }
 
@@ -53,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccessToken(storedAccessToken);
       setRefreshToken(storedRefreshToken);
 
-      // Fetch profile (getProfile handles token refresh automatically)
+      // Fetch profile (getProfile handles token refresh automatically and redirects on failure)
       const profile = await authService.getProfile();
       
       if (profile) {
@@ -61,18 +66,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(profile);
       } else {
         // Profile fetch failed (token refresh also failed)
+        // Note: getProfile already redirects to login, but we clear state here too
         setUser(null);
         setAccessToken(null);
         setRefreshToken(null);
         tokenStore.clearTokens();
+        // getProfile already redirected, but ensure we're not on a protected route
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.replace("/login?session_expired=true");
+        }
       }
     } catch (error) {
       console.error("Failed to refresh profile:", error);
-      // On error, clear auth state
+      // On error, clear auth state and redirect
       setUser(null);
       setAccessToken(null);
       setRefreshToken(null);
       tokenStore.clearTokens();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.replace("/login?session_expired=true");
+      }
     }
   }, []);
 
@@ -136,7 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    invite?: string
   ) => {
     try {
       await authService.signup({
@@ -144,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         first_name: firstName,
         last_name: lastName,
+        ...(invite ? { invite } : {}),
       });
     } catch (error) {
       console.error("Signup failed:", error);

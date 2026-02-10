@@ -12,8 +12,10 @@ import { tokenStore } from "@/lib/tokenStore";
 const publicRoutes = [
   "/login",
   "/signup",
+  "/auth/signup", // Redirect route for backend invite links
   "/forgot-password",
   "/reset-password",
+  "/auth/password/reset", // Backend redirect route for password reset
   "/verify-email",
   "/auth/verify",
   "/oauth/google/callback",
@@ -37,7 +39,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Check if current route is public
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  // Explicitly check for signup route to handle invite tokens
+  const isPublicRoute = publicRoutes.some((route) => {
+    if (route === "/signup") {
+      // Always allow signup route (even with query params)
+      return pathname === "/signup" || pathname.startsWith("/signup");
+    }
+    return pathname.startsWith(route);
+  });
 
   // Synchronous token check (client-side only) - blocks rendering immediately
   let hasTokensInStorage = false;
@@ -60,7 +69,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     console.log("[AuthGuard] Refresh token:", tokenStore.getRefreshToken() ? "EXISTS" : "MISSING");
 
     // CRITICAL: If no tokens exist, user is NOT authenticated
+    // Exception: Signup routes are always allowed (for invite tokens)
     if (!tokensExist) {
+      if (pathname === "/signup" || pathname === "/auth/signup") {
+        // Always allow signup routes, even without tokens (for invite flow)
+        console.log("[AuthGuard] ✅ Signup route - allowing access without tokens");
+        return;
+      }
       if (!isPublicRoute) {
         // No tokens and not on public route → MUST redirect to login IMMEDIATELY
         console.log("[AuthGuard] ❌ No tokens found on protected route, redirecting to login immediately");
@@ -85,7 +100,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
 
     // Fully authenticated - if on login/signup, redirect to dashboard
-    if (pathname === "/login" || pathname === "/signup") {
+    // Exception: Allow signup with invite token (check URL for invite parameter)
+    const hasInviteToken = typeof window !== "undefined" && window.location.search.includes("invite=");
+    if (pathname === "/login" || ((pathname === "/signup" || pathname === "/auth/signup") && !hasInviteToken)) {
       router.replace("/dashboard");
     }
   }, [isAuthenticated, isLoading, pathname, router, isPublicRoute]);
@@ -103,8 +120,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // CRITICAL: Block rendering if no tokens and not on public route
+  // Exception: Always allow signup routes to render
   // This prevents protected content from flashing before redirect
   if (typeof window !== "undefined") {
+    if (pathname === "/signup" || pathname === "/auth/signup") {
+      // Always allow signup routes to render
+      return <>{children}</>;
+    }
     if (!hasTokensInStorage && !isPublicRoute) {
       // Don't render anything - redirect is happening
       return null;
