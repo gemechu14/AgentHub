@@ -8,6 +8,7 @@ import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X, Use
 import { useRouter } from "next/navigation";
 import { APP_NAME } from "@/lib/config";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAgents } from "@/hooks/useAgents";
 
 interface AppShellProps {
   children: ReactNode;
@@ -69,6 +70,7 @@ export function AppShell({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, isLoading: authLoading } = useAuth();
+  const { data: agents } = useAgents();
   const [agentsOpen, setAgentsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -188,22 +190,36 @@ export function AppShell({
                       My Agents
                     </div>
                     <div className="mt-2 space-y-1 pl-1">
-                      <Link href="/agents/1" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="truncate">CRE Chatbot</span>
-                      </Link>
-                      <Link href="/agents/4" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-slate-600" />
-                        <span className="truncate">Data Analyst</span>
-                      </Link>
-                      <Link href="/agents/6" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="truncate">Sales Assistant</span>
-                      </Link>
-                      <Link href="/agents/2" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="truncate">Customer Support Bot</span>
-                      </Link>
+                      {agents && agents.length > 0 ? (
+                        agents.slice(0, 5).map((agent) => (
+                          <Link
+                            key={agent.id}
+                            href={`/agents/${agent.id}`}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                              pathname === `/agents/${agent.id}`
+                                ? "bg-slate-800/70 text-white"
+                                : agent.status === "active"
+                                ? "text-slate-300 hover:bg-slate-800/50"
+                                : "text-slate-400 hover:bg-slate-800/50"
+                            }`}
+                          >
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                agent.status === "active"
+                                  ? "bg-emerald-500"
+                                  : agent.status === "draft"
+                                  ? "bg-yellow-500"
+                                  : "bg-slate-600"
+                              }`}
+                            />
+                            <span className="truncate">{agent.name}</span>
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-slate-500">
+                          No agents yet
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -310,22 +326,36 @@ export function AppShell({
                       My Agents
                     </div>
                     <div className="mt-2 space-y-1 pl-1">
-                      <Link href="/agents/1" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="truncate">CRE Chatbot</span>
-                      </Link>
-                      <Link href="/agents/4" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-slate-600" />
-                        <span className="truncate">Data Analyst</span>
-                      </Link>
-                      <Link href="/agents/6" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="truncate">Sales Assistant</span>
-                      </Link>
-                      <Link href="/agents/2" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <span className="truncate">Customer Support Bot</span>
-                      </Link>
+                      {agents && agents.length > 0 ? (
+                        agents.slice(0, 5).map((agent) => (
+                          <Link
+                            key={agent.id}
+                            href={`/agents/${agent.id}`}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                              pathname === `/agents/${agent.id}`
+                                ? "bg-slate-800/70 text-white"
+                                : agent.status === "active"
+                                ? "text-slate-300 hover:bg-slate-800/50"
+                                : "text-slate-400 hover:bg-slate-800/50"
+                            }`}
+                          >
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                agent.status === "active"
+                                  ? "bg-emerald-500"
+                                  : agent.status === "draft"
+                                  ? "bg-yellow-500"
+                                  : "bg-slate-600"
+                              }`}
+                            />
+                            <span className="truncate">{agent.name}</span>
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-slate-500">
+                          No agents yet
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

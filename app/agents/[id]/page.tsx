@@ -2,24 +2,82 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowLeft, Send, ChevronDown, ChevronRight, Database, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Send, ChevronDown, ChevronRight, Database, Sparkles, AlertCircle, Info, X } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { mockAgents } from "@/features/dashboard/mockAgents";
+import { useAuth } from "@/contexts/AuthContext";
+import { getAgent, getAccountId } from "@/services/agentsService";
+import { usePowerBIChat } from "@/hooks/usePowerBIChat";
+import { mapConnectionTypeFromAPI, mapModelTypeFromAPI } from "@/lib/agentHelpers";
+import type { Agent } from "@/types/agent";
 
 export default function TestAgentPage() {
   const params = useParams();
+  const { user } = useAuth();
   const agentId = params.id as string;
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const agent = mockAgents.find((a) => a.id === agentId);
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [systemInstructionsOpen, setSystemInstructionsOpen] = useState(false);
+  const [accountId, setAccountId] = useState<string | null>(null);
 
-  if (!agent) {
+  // Initialize chat hook
+  const chat = usePowerBIChat({
+    accountId: accountId || "",
+    agentId: agentId,
+  });
+
+  useEffect(() => {
+    const loadAgent = async () => {
+      const id = getAccountId(user);
+      if (!id) {
+        setError("No account ID found. Please ensure you are part of an account.");
+        setIsLoading(false);
+        return;
+      }
+
+      setAccountId(id);
+
+      try {
+        const agentData = await getAgent(id, agentId);
+        setAgent(agentData);
+      } catch (err) {
+        console.error("Failed to load agent:", err);
+        setError(err instanceof Error ? err.message : "Failed to load agent");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      loadAgent();
+    }
+  }, [user, agentId]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat.messages]);
+
+  if (isLoading) {
+    return (
+      <AppShell title="Agent">
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <p className="mt-4 text-slate-600 text-sm">Loading agent...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error || !agent) {
     return (
       <AppShell title="Agent Not Found">
         <div className="text-center py-12">
-          <p className="text-slate-500">Agent not found</p>
+          <p className="text-slate-500">{error || "Agent not found"}</p>
           <Link href="/agents" className="text-blue-500 hover:text-blue-600 mt-4 inline-block">
             Back to Agents
           </Link>
@@ -30,20 +88,48 @@ export default function TestAgentPage() {
 
   const isActive = agent.status === "active";
   const isDraft = agent.status === "draft";
-  const hasApiKeyExpired = agent.name === "Data Analyst"; // Mock condition
+  const hasApiKeyExpired = false; // TODO: Check API key expiration from backend
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Handle send message
-      setMessage("");
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    if (!message.trim() || chat.loading || !accountId) {
+      return;
+    }
+
+    const question = message.trim();
+    setMessage("");
+
+    try {
+      await chat.sendMessage(question);
+    } catch (err) {
+      // Error is handled by the hook
+      console.error("Failed to send message:", err);
     }
   };
 
-  const suggestedQuestions = [
-    "Summarize agent purpose",
-    "Show example insights",
-    "What KPIs should I track?",
-  ];
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const suggestedQuestions = agent?.connection_type === "POWERBI" 
+    ? [
+        "What tables are in this dataset?",
+        "Show me the total sales",
+        "What columns are in the Sales table?",
+        "List the top 10 products by revenue",
+        "How many customers do we have?",
+      ]
+    : [
+        "Summarize agent purpose",
+        "Show example insights",
+        "What KPIs should I track?",
+      ];
 
   return (
     <AppShell title="Test Agent">
@@ -100,7 +186,7 @@ export default function TestAgentPage() {
                   {isActive ? "Active" : "Draft"}
                 </span>
                 <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 ring-1 ring-slate-200">
-                  {agent.type.replace(/_/g, " ")}
+                  {mapConnectionTypeFromAPI(agent.connection_type)}
                 </span>
               </div>
             </div>
@@ -131,16 +217,125 @@ export default function TestAgentPage() {
           {/* Chat Section */}
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="border-b border-slate-200 px-6 py-4">
+              <div className="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                 <h2 className="text-base font-semibold text-slate-900">Chat</h2>
+                {chat.messages.length > 0 && (
+                  <button
+                    onClick={chat.clearMessages}
+                    className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                  >
+                    Clear Chat
+                  </button>
+                )}
               </div>
               
               {/* Chat Messages Area */}
-              <div className="p-6 min-h-[400px] flex items-center justify-center">
-                <p className="text-sm text-slate-400">
-                  Start a conversation with your agent
-                </p>
+              <div className="p-6 min-h-[400px] max-h-[600px] overflow-y-auto">
+                {chat.messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
+                    <div className="text-4xl mb-4">💬</div>
+                    <h3 className="text-base font-semibold text-slate-900 mb-2">
+                      Start a Conversation
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-6">
+                      {agent?.connection_type === "POWERBI"
+                        ? "Ask questions about your Power BI data in natural language"
+                        : "Start chatting with your agent"}
+                    </p>
+                    {agent?.connection_type === "POWERBI" && (
+                      <div className="text-left max-w-md">
+                        <p className="text-xs font-medium text-slate-700 mb-2">Example questions:</p>
+                        <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                          <li>"What tables are in this dataset?"</li>
+                          <li>"Show me the total sales"</li>
+                          <li>"What columns are in the Sales table?"</li>
+                          <li>"List the top 10 products by revenue"</li>
+                          <li>"How many customers do we have?"</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {chat.messages.map((msg) => (
+                      <div key={msg.id} className="space-y-3">
+                        {/* User Question */}
+                        <div className="flex justify-end">
+                          <div className="max-w-[80%] rounded-lg bg-slate-900 px-4 py-3 text-sm text-white">
+                            <div className="text-xs font-medium opacity-90 mb-1">You</div>
+                            <div className="whitespace-pre-wrap">{msg.question}</div>
+                          </div>
+                        </div>
+
+                        {/* AI Response */}
+                        <div className="flex justify-start">
+                          <div className="max-w-[80%] rounded-lg bg-white border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm">
+                            <div className="text-xs font-medium text-slate-500 mb-2">AI Assistant</div>
+                            
+                            {/* Resolution Note */}
+                            {msg.response.resolution_note && (
+                              <div className="mb-3 p-2 rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-900">
+                                <Info className="w-3 h-3 inline mr-1" />
+                                {msg.response.resolution_note}
+                              </div>
+                            )}
+
+                            {/* Answer */}
+                            <div className="whitespace-pre-wrap leading-relaxed mb-2">
+                              {msg.response.answer}
+                            </div>
+
+                            {/* DAX Query (Expandable) */}
+                            {msg.response.action === "QUERY" && msg.response.final_dax && (
+                              <details className="mt-3">
+                                <summary className="cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-700 select-none">
+                                  📊 View DAX Query
+                                </summary>
+                                <pre className="mt-2 p-3 rounded-md bg-slate-50 border border-slate-200 overflow-x-auto text-xs font-mono">
+                                  {msg.response.final_dax}
+                                </pre>
+                              </details>
+                            )}
+
+                            {/* Error Display */}
+                            {msg.response.error && (
+                              <div className="mt-3 p-2 rounded-md bg-red-50 border border-red-200 text-xs text-red-900">
+                                <AlertCircle className="w-3 h-3 inline mr-1" />
+                                Error: {msg.response.error}
+                              </div>
+                            )}
+
+                            {/* Action Badge */}
+                            <div className="mt-2 text-xs text-slate-400">
+                              {msg.response.action === "DESCRIBE" && "📋 Answered from schema"}
+                              {msg.response.action === "QUERY" && "🔍 Executed DAX query"}
+                              {msg.response.action === "ERROR" && "❌ Error occurred"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
               </div>
+
+              {/* Error Display */}
+              {chat.error && (
+                <div className="mx-6 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-red-900">Error</p>
+                    <p className="text-sm text-red-700">{chat.error}</p>
+                  </div>
+                  <button
+                    onClick={() => chat.clearMessages()}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               {/* Suggested Questions */}
               <div className="border-t border-slate-200 px-6 py-4">
@@ -160,23 +355,39 @@ export default function TestAgentPage() {
 
               {/* Message Input */}
               <div className="border-t border-slate-200 px-6 py-4">
-                <div className="flex items-center gap-3">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-3">
                   <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Type a message..."
-                    className="flex-grow rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={handleKeyDown}
+                    placeholder={
+                      chat.loading
+                        ? "Processing..."
+                        : agent?.connection_type === "POWERBI"
+                        ? "Ask a question about your Power BI data..."
+                        : "Type a message..."
+                    }
+                    disabled={chat.loading || !accountId || agent?.connection_type !== "POWERBI"}
+                    className="flex-grow rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                   <button
-                    onClick={handleSendMessage}
-                    disabled={!message.trim()}
+                    type="submit"
+                    disabled={!message.trim() || chat.loading || !accountId || agent?.connection_type !== "POWERBI"}
                     className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-4 h-4" />
+                    {chat.loading ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
                   </button>
-                </div>
+                </form>
+                {agent?.connection_type !== "POWERBI" && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Chat is only available for Power BI agents
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -206,9 +417,7 @@ export default function TestAgentPage() {
                 </button>
                 {systemInstructionsOpen && (
                   <p className="mt-3 text-sm text-slate-600">
-                    {agent.name === "Data Analyst"
-                      ? "You are a data analyst that helps interpret business metrics and create insights."
-                      : "No instructions provided"}
+                    {agent.system_instructions || "No instructions provided"}
                   </p>
                 )}
               </div>
@@ -222,10 +431,12 @@ export default function TestAgentPage() {
                   </h4>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="flex h-2 w-2 items-center justify-center rounded-full bg-emerald-500 flex-shrink-0" />
+                  <div className={`flex h-2 w-2 items-center justify-center rounded-full flex-shrink-0 ${
+                    agent.connection_type !== "NONE" ? "bg-emerald-500" : "bg-slate-300"
+                  }`} />
                   <p className="text-sm text-slate-600">
-                    {agent.name === "CRE Chatbot"
-                      ? "Connected: Power BI Semantic Model"
+                    {agent.connection_type !== "NONE"
+                      ? `Connected: ${mapConnectionTypeFromAPI(agent.connection_type)}`
                       : "No data connection configured"}
                   </p>
                 </div>
@@ -241,7 +452,7 @@ export default function TestAgentPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">Model:</span>
                     <span className="font-medium text-slate-900">
-                      {agent.name === "Data Analyst" ? "Google Gemini Pro" : "OpenAI GPT-4"}
+                      {mapModelTypeFromAPI(agent.model_type)}
                     </span>
                   </div>
                   {hasApiKeyExpired && (
@@ -264,7 +475,13 @@ export default function TestAgentPage() {
 
               {/* Last Updated */}
               <div className="border-t border-slate-200 pt-6">
-                <p className="text-xs text-slate-500">Last updated: Feb 2, 2026</p>
+                <p className="text-xs text-slate-500">
+                  {agent.updated_at
+                    ? `Last updated: ${new Date(agent.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                    : agent.created_at
+                    ? `Created: ${new Date(agent.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                    : "Last updated: Unknown"}
+                </p>
               </div>
             </div>
           </div>

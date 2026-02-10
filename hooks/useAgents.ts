@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { getAgents } from "@/services/agentsService";
+import { useAuth } from "@/contexts/AuthContext";
+import { listAgents, getAccountId } from "@/services/agentsService";
 import type { Agent } from "@/types/agent";
-import { ApiError } from "@/services/httpClient";
+import { ApiError } from "@/services/apiClient";
 
 interface UseAgentsState {
   data: Agent[] | null;
@@ -10,6 +11,7 @@ interface UseAgentsState {
 }
 
 export function useAgents() {
+  const { user } = useAuth();
   const [state, setState] = useState<UseAgentsState>({
     data: null,
     isLoading: true,
@@ -22,10 +24,21 @@ export function useAgents() {
     const loadAgents = async () => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      try {
-        const agents = await getAgents();
+      const accountId = getAccountId(user);
+      if (!accountId) {
         if (!isSubscribed) return;
-        setState({ data: agents, isLoading: false, error: null });
+        setState({
+          data: null,
+          isLoading: false,
+          error: new ApiError({ message: "No account ID found. Please ensure you are part of an account." }),
+        });
+        return;
+      }
+
+      try {
+        const response = await listAgents(accountId);
+        if (!isSubscribed) return;
+        setState({ data: response.agents, isLoading: false, error: null });
       } catch (error) {
         if (!isSubscribed) return;
         setState({
@@ -41,14 +54,23 @@ export function useAgents() {
     return () => {
       isSubscribed = false;
     };
-  }, []);
+  }, [user]);
 
   const refetch = () => {
-    // trigger effect by resetting state; for now we can call getAgents directly
+    const accountId = getAccountId(user);
+    if (!accountId) {
+      setState({
+        data: null,
+        isLoading: false,
+        error: new ApiError({ message: "No account ID found. Please ensure you are part of an account." }),
+      });
+      return;
+    }
+
     setState((prev) => ({ ...prev, isLoading: true }));
-    getAgents()
-      .then((agents) => {
-        setState({ data: agents, isLoading: false, error: null });
+    listAgents(accountId)
+      .then((response) => {
+        setState({ data: response.agents, isLoading: false, error: null });
       })
       .catch((error) => {
         setState({

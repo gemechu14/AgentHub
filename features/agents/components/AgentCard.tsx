@@ -10,7 +10,11 @@ interface AgentCardProps {
 
 export function AgentCard({ agent }: AgentCardProps) {
   const isActive = agent.status === "active";
-  const typeLabel = agent.type.replace("_", " ");
+  const connectionLabel = agent.connection_type === "POWERBI" 
+    ? "Power BI" 
+    : agent.connection_type === "DB" 
+    ? "Database" 
+    : "None";
 
   return (
     <Link href={`/agents/${agent.id}`} className="block hover:scale-[1.02] transition-transform">
@@ -24,13 +28,13 @@ export function AgentCard({ agent }: AgentCardProps) {
               {agent.name}
             </h3>
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Badge variant="default">{typeLabel}</Badge>
+              <Badge variant="default">{connectionLabel}</Badge>
               <Badge variant={isActive ? "success" : "default"}>
-                {isActive ? "Active" : "Draft"}
+                {isActive ? "Active" : agent.status === "draft" ? "Draft" : "Inactive"}
               </Badge>
             </div>
             <p className="text-xs text-slate-500 line-clamp-2">
-              {agent.description}
+              {agent.description || "No description"}
             </p>
           </div>
         </div>

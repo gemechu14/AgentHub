@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bot, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Bot, Eye, EyeOff, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
-import type { Agent } from "@/types/agent";
+import { useAuth } from "@/contexts/AuthContext";
+import { updateAgent, getAccountId } from "@/services/agentsService";
+import { testPowerBIConnection, getPowerBISchema } from "@/services/powerbiService";
+import { 
+  mapConnectionTypeToAPI, 
+  mapConnectionTypeFromAPI, 
+  mapModelTypeToAPI, 
+  mapModelTypeFromAPI,
+  mapDatabaseTypeFromAPI,
+  buildPowerBIConfig, 
+  buildDBConfig 
+} from "@/lib/agentHelpers";
+import type { Agent, UpdateAgentRequest, PowerBIConnectionConfig, DBConnectionConfig } from "@/types/agent";
+import type { ConnectionCheckResponse, SchemaResponse } from "@/types/powerbi";
 
 type TabType = "basics" | "behavior" | "data-connection";
 
@@ -14,39 +27,55 @@ interface EditAgentFormProps {
 
 export function EditAgentForm({ agent }: EditAgentFormProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("basics");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<ConnectionCheckResponse | null>(null);
+  const [schemaResult, setSchemaResult] = useState<SchemaResponse | null>(null);
 
   // Form state initialized with agent data
   const [agentName, setAgentName] = useState(agent.name);
-  const [description, setDescription] = useState(agent.description);
-  const [agentType, setAgentType] = useState(
-    agent.type.replace(/_/g, " ").charAt(0).toUpperCase() +
-      agent.type.replace(/_/g, " ").slice(1)
-  );
+  const [description, setDescription] = useState(agent.description || "");
   const [status, setStatus] = useState<"draft" | "active">(agent.status);
   
-  const [aiModel, setAiModel] = useState(
-    agent.name === "Data Analyst" ? "Google Gemini Pro" : "OpenAI GPT-4"
-  );
-  const [apiKey, setApiKey] = useState("");
-  const [systemInstructions, setSystemInstructions] = useState(
-    agent.name === "Data Analyst"
-      ? "You are a data analyst that helps interpret business metrics and create insights."
-      : ""
-  );
+  const [aiModel, setAiModel] = useState(mapModelTypeFromAPI(agent.model_type));
+  const [apiKey, setApiKey] = useState(""); // Don't show existing API key for security
+  const [systemInstructions, setSystemInstructions] = useState(agent.system_instructions || "");
   
-  const [connectionType, setConnectionType] = useState(
-    agent.name === "CRE Chatbot" ? "Power BI Semantic Model" : "None"
-  );
+  const [connectionType, setConnectionType] = useState(mapConnectionTypeFromAPI(agent.connection_type));
+  // PowerBI fields
   const [workspaceId, setWorkspaceId] = useState("");
   const [datasetId, setDatasetId] = useState("");
-  const [tablesContext, setTablesContext] = useState("");
-  const [measuresContext, setMeasuresContext] = useState("");
-  const [notesBusinessRules, setNotesBusinessRules] = useState("");
+  const [tenantId, setTenantId] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  // DB fields
   const [databaseType, setDatabaseType] = useState("PostgreSQL");
   const [connectionString, setConnectionString] = useState("");
-  const [notesContext, setNotesContext] = useState("");
+
+  // Initialize form fields from agent connection_config
+  useEffect(() => {
+    if (agent.connection_config) {
+      if (agent.connection_type === "POWERBI") {
+        const config = agent.connection_config as PowerBIConnectionConfig;
+        setTenantId(config.tenant_id || "");
+        setClientId(config.client_id || "");
+        setClientSecret(config.client_secret || "");
+        setWorkspaceId(config.workspace_id || "");
+        setDatasetId(config.dataset_id || "");
+      } else if (agent.connection_type === "DB") {
+        const config = agent.connection_config as DBConnectionConfig;
+        setDatabaseType(mapDatabaseTypeFromAPI(config.database_type));
+        // Reconstruct connection string from config
+        setConnectionString(
+          `${config.database_type}://${config.username}:${config.password}@${config.host}:${config.port}/${config.database}`
+        );
+      }
+    }
+  }, [agent]);
 
   const tabs = [
     { id: "basics", label: "Basics" },
@@ -72,6 +101,129 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
   const connectionTypes = ["None", "Power BI Semantic Model", "SQL Database"];
 
   const databaseTypes = ["PostgreSQL", "MySQL", "SQL Server", "Oracle"];
+
+  const handleTest = async () => {
+    setError(null);
+    setTestResult(null);
+    setSchemaResult(null);
+
+    // Only test Power BI connections for now
+    if (connectionType !== "Power BI Semantic Model") {
+      setError("Testing is only available for Power BI connections");
+      return;
+    }
+
+    // Validate Power BI fields
+    if (!tenantId || !clientId || !workspaceId || !datasetId || !clientSecret) {
+      setError("Please fill in all Power BI connection fields before testing");
+      return;
+    }
+
+    setIsTesting(true);
+
+    try {
+      const credentials = {
+        tenant_id: tenantId,
+        client_id: clientId,
+        workspace_id: workspaceId,
+        dataset_id: datasetId,
+        client_secret: clientSecret,
+      };
+
+      // Test connection
+      const connectionResult = await testPowerBIConnection(credentials);
+      setTestResult(connectionResult);
+
+      // If connection successful, also get schema
+      if (connectionResult.connected) {
+        try {
+          const schema = await getPowerBISchema(credentials);
+          setSchemaResult(schema);
+        } catch (schemaError) {
+          console.error("Failed to get schema:", schemaError);
+          // Don't show error if connection worked but schema failed
+        }
+      }
+    } catch (err) {
+      console.error("Test error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to test connection";
+      setError(errorMessage);
+      setTestResult({
+        connected: false,
+        message: errorMessage,
+        error: errorMessage,
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+
+    // Validation
+    if (!agentName.trim()) {
+      setError("Agent name is required");
+      return;
+    }
+
+    const accountId = getAccountId(user);
+    if (!accountId) {
+      setError("No account ID found. Please ensure you are part of an account.");
+      return;
+    }
+
+    // Build connection config based on connection type
+    let connectionConfig = undefined;
+    const apiConnectionType = mapConnectionTypeToAPI(connectionType);
+
+    if (apiConnectionType === "POWERBI") {
+      if (!workspaceId || !datasetId) {
+        setError("Workspace ID and Dataset ID are required for Power BI connections");
+        return;
+      }
+      connectionConfig = buildPowerBIConfig(workspaceId, datasetId, tenantId, clientId, clientSecret);
+      if (!connectionConfig) {
+        setError("Invalid Power BI configuration");
+        return;
+      }
+    } else if (apiConnectionType === "DB") {
+      if (!connectionString) {
+        setError("Connection string is required for database connections");
+        return;
+      }
+      connectionConfig = buildDBConfig(connectionString, databaseType);
+      if (!connectionConfig) {
+        setError("Invalid connection string format. Expected: postgresql://user:password@host:port/database");
+        return;
+      }
+    }
+
+    // Build request payload
+    const payload: UpdateAgentRequest = {
+      name: agentName.trim(),
+      description: description.trim() || undefined,
+      status,
+      model_type: mapModelTypeToAPI(aiModel),
+      api_key: apiKey.trim() || undefined, // Only send if changed
+      system_instructions: systemInstructions.trim() || undefined,
+      connection_type: apiConnectionType,
+      connection_config: connectionConfig,
+    };
+
+    setIsLoading(true);
+
+    try {
+      await updateAgent(accountId, agent.id, payload);
+      router.push(`/agents/${agent.id}`);
+    } catch (err) {
+      console.error("Failed to update agent:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to update agent. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -122,6 +274,78 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
 
         {/* Form Content */}
         <div className="px-8 py-6">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Test Results */}
+          {testResult && (
+            <div className={`mb-6 p-4 rounded-lg border flex items-start gap-2 ${
+              testResult.connected
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
+            }`}>
+              {testResult.connected ? (
+                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              ) : (
+                <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${
+                  testResult.connected ? "text-green-900" : "text-red-900"
+                }`}>
+                  {testResult.connected ? "✅ Connection Successful" : "❌ Connection Failed"}
+                </p>
+                <p className={`text-sm mt-1 ${
+                  testResult.connected ? "text-green-700" : "text-red-700"
+                }`}>
+                  {testResult.message}
+                </p>
+                {testResult.table_count !== undefined && (
+                  <p className="text-sm mt-1 text-green-700">
+                    Tables found: {testResult.table_count}
+                  </p>
+                )}
+                {testResult.error && (
+                  <p className="text-sm mt-1 text-red-700">
+                    Error: {testResult.error}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Schema Results */}
+          {schemaResult && schemaResult.success && schemaResult.data && (
+            <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
+              <p className="text-sm font-medium text-blue-900 mb-2">
+                📊 Schema Information
+              </p>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="font-medium text-blue-800">Tables:</span>{" "}
+                  <span className="text-blue-700">{schemaResult.data.tables?.length || 0}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-800">Columns:</span>{" "}
+                  <span className="text-blue-700">{schemaResult.data.columns?.length || 0}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-800">Measures:</span>{" "}
+                  <span className="text-blue-700">{schemaResult.data.measures?.length || 0}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-800">Relationships:</span>{" "}
+                  <span className="text-blue-700">{schemaResult.data.relationships?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Basics Tab */}
           {activeTab === "basics" && (
             <div className="space-y-6">
@@ -153,23 +377,6 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
                 />
               </div>
 
-              {/* Type */}
-              <div>
-                <label className="block text-sm font-medium text-slate-900 mb-2">
-                  Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={agentType}
-                  onChange={(e) => setAgentType(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat pr-10"
-                >
-                  {agentTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
               {/* Status */}
               <div>
@@ -302,13 +509,13 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
             <div className="space-y-6">
               {/* Connection Type */}
               <div>
-                <label className="block text-sm font-medium text-slate-500 mb-3">
+                <label className="block text-sm font-medium text-slate-900 mb-2">
                   Connection Type
                 </label>
                 <select
                   value={connectionType}
                   onChange={(e) => setConnectionType(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-slate-800 text-white px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat pr-10"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat pr-10"
                 >
                   {connectionTypes.map((type) => (
                     <option key={type} value={type}>
@@ -320,72 +527,74 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
 
               {/* Power BI Semantic Model Fields */}
               {connectionType === "Power BI Semantic Model" && (
-                <div className="space-y-6 rounded-lg bg-slate-800 p-6">
+                <div className="space-y-6">
+                  {/* Tenant ID */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Tenant ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={tenantId}
+                      onChange={(e) => setTenantId(e.target.value)}
+                      placeholder="Enter Azure AD tenant ID"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Client ID */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Client ID <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      placeholder="Enter Azure AD application (client) ID"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Client Secret */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Client Secret <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={clientSecret}
+                      onChange={(e) => setClientSecret(e.target.value)}
+                      placeholder="Enter Azure AD client secret"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
                   {/* Workspace ID */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Workspace ID
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Workspace ID <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={workspaceId}
                       onChange={(e) => setWorkspaceId(e.target.value)}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Enter Power BI workspace ID"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
 
                   {/* Dataset ID */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Dataset ID (Semantic Model)
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Dataset ID (Semantic Model) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={datasetId}
                       onChange={(e) => setDatasetId(e.target.value)}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {/* Tables Context */}
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Tables Context
-                    </label>
-                    <textarea
-                      value={tablesContext}
-                      onChange={(e) => setTablesContext(e.target.value)}
-                      placeholder="Describe the tables available..."
-                      rows={5}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                    />
-                  </div>
-
-                  {/* Measures Context */}
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Measures Context
-                    </label>
-                    <textarea
-                      value={measuresContext}
-                      onChange={(e) => setMeasuresContext(e.target.value)}
-                      placeholder="Describe the measures available..."
-                      rows={5}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                    />
-                  </div>
-
-                  {/* Notes / Business Rules */}
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Notes / Business Rules
-                    </label>
-                    <textarea
-                      value={notesBusinessRules}
-                      onChange={(e) => setNotesBusinessRules(e.target.value)}
-                      placeholder="Any business rules or notes..."
-                      rows={5}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                      placeholder="Enter Power BI dataset ID"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -393,16 +602,16 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
 
               {/* SQL Database Fields */}
               {connectionType === "SQL Database" && (
-                <div className="space-y-6 rounded-lg bg-slate-800 p-6">
+                <div className="space-y-6">
                   {/* Database Type */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Database Type
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Database Type <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={databaseType}
                       onChange={(e) => setDatabaseType(e.target.value)}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 text-white px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat pr-10"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M6%208L2%204h8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_1rem_center] bg-no-repeat pr-10"
                     >
                       {databaseTypes.map((type) => (
                         <option key={type} value={type}>
@@ -414,30 +623,19 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
 
                   {/* Connection String */}
                   <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Connection String
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Connection String <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={connectionString}
                       onChange={(e) => setConnectionString(e.target.value)}
                       placeholder="postgresql://user:password@host:port/database"
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
-                  </div>
-
-                  {/* Notes Context */}
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-3">
-                      Notes Context
-                    </label>
-                    <textarea
-                      value={notesContext}
-                      onChange={(e) => setNotesContext(e.target.value)}
-                      placeholder="Describe the database schema..."
-                      rows={5}
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Format: postgresql://username:password@host:port/database
+                    </p>
                   </div>
                 </div>
               )}
@@ -449,16 +647,19 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
         <div className="px-8 py-6 border-t border-slate-200 flex items-center gap-3">
           <button
             type="button"
-            className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors"
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Agent
+            {isLoading ? "Saving..." : "Save Agent"}
           </button>
           <button
             type="button"
-            disabled
-            className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-400 shadow-sm cursor-not-allowed"
+            onClick={handleTest}
+            disabled={isTesting || connectionType !== "Power BI Semantic Model"}
+            className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save & Test
+            {isTesting ? "Testing..." : "Test"}
           </button>
           <button
             type="button"

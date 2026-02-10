@@ -6,10 +6,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/common/Card";
 import { CardSkeleton } from "@/components/common/CardSkeleton";
 import { AgentsSection } from "@/features/dashboard/AgentsSection";
+import { useAgents } from "@/hooks/useAgents";
 import { Bot, MessageSquare, Link as LinkIcon, Clock } from "lucide-react";
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const { data: agents } = useAgents();
 
   useEffect(() => {
     // Simulate loading
@@ -49,7 +51,7 @@ export default function DashboardPage() {
                 <Bot className="h-5 w-5 text-blue-600" />
               </div>
               <p className="text-sm font-medium text-slate-500">Total Agents</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">7</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{agents?.length || 0}</p>
             </div>
           </Card>
 

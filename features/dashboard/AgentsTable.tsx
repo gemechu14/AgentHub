@@ -47,24 +47,30 @@ export function AgentsTable({ agents }: AgentsTableProps) {
                 </div>
               </td>
               <td className="px-4 py-4 text-xs text-slate-700 capitalize whitespace-nowrap">
-                {agent.type.replace("_", " ")}
+                {agent.connection_type === "POWERBI" ? "Power BI" : agent.connection_type === "DB" ? "Database" : "None"}
               </td>
               <td className="px-4 py-4 text-xs whitespace-nowrap">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium ${
                     agent.status === "active"
                       ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                      : "bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                      : agent.status === "draft"
+                      ? "bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                      : "bg-gray-100 text-gray-700 ring-1 ring-gray-200"
                   }`}
                 >
-                  {agent.status === "active" ? "Active" : "Draft"}
+                  {agent.status === "active" ? "Active" : agent.status === "draft" ? "Draft" : "Inactive"}
                 </span>
               </td>
               <td className="px-4 py-4 text-xs text-slate-600 whitespace-nowrap">
-                {agent.lastUsedAt ? "Feb 1, 2026" : "Never"}
+                {agent.updated_at 
+                  ? new Date(agent.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                  : agent.created_at
+                  ? new Date(agent.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                  : "Never"}
               </td>
               <td className="px-4 py-4 text-right text-sm font-semibold text-slate-900 whitespace-nowrap">
-                {agent.conversations30d}
+                -
               </td>
             </tr>
           ))}
