@@ -42,8 +42,8 @@ function GoogleCallbackHandler() {
         // Fetch user data
         await refreshUser();
 
-        // Redirect to dashboard
-        router.push("/dashboard");
+        // Redirect to chat
+        router.push("/chat");
       } catch (err) {
         console.error("Google callback error:", err);
         const errorMessage = err instanceof Error ? err.message : "Google authentication failed";

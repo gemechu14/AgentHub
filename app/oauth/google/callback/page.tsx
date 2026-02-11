@@ -63,10 +63,10 @@ function GoogleOAuthCallback() {
           setUser(profile);
         }
 
-        // Immediately redirect to dashboard - no loading page shown
+        // Immediately redirect to chat - no loading page shown
         // Use window.location.replace for clean redirect (no back button history)
-        const returnUrl = searchParams.get("state") || "/dashboard";
-        window.location.replace(returnUrl ? decodeURIComponent(returnUrl) : "/dashboard");
+        const returnUrl = searchParams.get("state") || "/chat";
+        window.location.replace(returnUrl ? decodeURIComponent(returnUrl) : "/chat");
       } catch (err) {
         console.error("OAuth callback error:", err);
         const errorMessage = err instanceof Error ? err.message : "Google sign-in failed";

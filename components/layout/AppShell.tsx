@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { APP_NAME } from "@/lib/config";
 import { useAuth } from "@/contexts/AuthContext";
@@ -147,13 +147,14 @@ export function AppShell({
 
           <nav className="flex flex-1 flex-col overflow-y-auto py-4 px-2">
             <div className="flex-grow space-y-1">
-              <NavItem
+              {/* Dashboard hidden - redirecting to chat instead */}
+              {/* <NavItem
                 href="/dashboard"
                 label="Dashboard"
                 icon={<LayoutDashboard className="w-5 h-5" />}
                 isActive={pathname === "/dashboard"}
                 isCollapsed={isCollapsed}
-              />
+              /> */}
 
               <div>
                 <div className="relative">
@@ -234,6 +235,13 @@ export function AppShell({
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={isCollapsed}
               />
+              <NavItem
+                href="/admin"
+                label="Admin Portal"
+                icon={<Shield className="w-5 h-5" />}
+                isActive={pathname.startsWith("/admin")}
+                isCollapsed={isCollapsed}
+              />
               <div className="relative overflow-visible">
                 <button
                   ref={profileButtonRef}
@@ -283,7 +291,8 @@ export function AppShell({
 
           <nav className="flex flex-1 flex-col overflow-y-auto py-4 px-2">
             <div className="flex-grow space-y-6">
-              <div>
+              {/* Dashboard hidden - redirecting to chat instead */}
+              {/* <div>
                 <NavItem
                   href="/dashboard"
                   label="Dashboard"
@@ -291,7 +300,7 @@ export function AppShell({
                   isActive={pathname === "/dashboard"}
                   isCollapsed={false}
                 />
-              </div>
+              </div> */}
 
               <div>
                 <div className="relative">
@@ -368,6 +377,13 @@ export function AppShell({
                 label="Settings"
                 icon={<Settings className="w-5 h-5" />}
                 isActive={pathname.startsWith("/settings")}
+                isCollapsed={false}
+              />
+              <NavItem
+                href="/admin"
+                label="Admin Portal"
+                icon={<Shield className="w-5 h-5" />}
+                isActive={pathname.startsWith("/admin")}
                 isCollapsed={false}
               />
               <div className="relative">

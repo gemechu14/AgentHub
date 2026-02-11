@@ -7,8 +7,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect root to dashboard
-    router.replace("/dashboard");
+    // Redirect root to chat
+    router.replace("/chat");
   }, [router]);
 
   return null;

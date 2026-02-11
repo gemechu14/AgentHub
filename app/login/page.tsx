@@ -23,7 +23,7 @@ export default function LoginPage() {
 
   // Check if session expired or return URL
   const sessionExpired = searchParams.get("session_expired") === "true";
-  const returnUrl = searchParams.get("returnUrl") || "/dashboard";
+  const returnUrl = searchParams.get("returnUrl") || "/chat";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

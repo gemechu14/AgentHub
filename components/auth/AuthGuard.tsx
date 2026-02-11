@@ -99,11 +99,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
-    // Fully authenticated - if on login/signup, redirect to dashboard
+    // Fully authenticated - if on login/signup, redirect to chat
     // Exception: Allow signup with invite token (check URL for invite parameter)
     const hasInviteToken = typeof window !== "undefined" && window.location.search.includes("invite=");
     if (pathname === "/login" || ((pathname === "/signup" || pathname === "/auth/signup") && !hasInviteToken)) {
-      router.replace("/dashboard");
+      router.replace("/chat");
     }
   }, [isAuthenticated, isLoading, pathname, router, isPublicRoute]);
 
