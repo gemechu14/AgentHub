@@ -242,7 +242,7 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
     <div className="space-y-6">
       {/* Back to Agents Link */}
       <Link
-        href={`/agents/${agent.id}`}
+        href="/admin"
         className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />

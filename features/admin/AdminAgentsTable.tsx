@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { deleteAgent, getAccountId } from "@/services/agentsService";
 import { useAuth } from "@/contexts/AuthContext";
+import { DeleteAgentModal } from "./DeleteAgentModal";
 
 interface AdminAgentsTableProps {
   agents: Agent[];
@@ -53,6 +54,15 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    agentId: string | null;
+    agentName: string;
+  }>({
+    isOpen: false,
+    agentId: null,
+    agentName: "",
+  });
 
   if (agents.length === 0) {
     return (
@@ -66,20 +76,31 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
     router.push(`/agents/${agentId}/edit`);
   };
 
-  const handleDelete = async (agentId: string) => {
-    if (!confirm("Are you sure you want to delete this agent? This action cannot be undone.")) {
-      return;
+  const handleDelete = (agentId: string) => {
+    // Find the agent to get its name
+    const agent = agents.find((a) => a.id === agentId);
+    if (agent) {
+      setDeleteModalState({
+        isOpen: true,
+        agentId,
+        agentName: agent.name,
+      });
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModalState.agentId) return;
 
     const accountId = getAccountId(user);
     if (!accountId) {
       alert("No account ID found. Please ensure you are part of an account.");
+      setDeleteModalState({ isOpen: false, agentId: null, agentName: "" });
       return;
     }
 
-    setDeletingId(agentId);
+    setDeletingId(deleteModalState.agentId);
     try {
-      await deleteAgent(accountId, agentId);
+      await deleteAgent(accountId, deleteModalState.agentId);
       // Refresh the page or update the agents list
       window.location.reload();
     } catch (error) {
@@ -87,6 +108,13 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
       alert(error instanceof Error ? error.message : "Failed to delete agent. Please try again.");
     } finally {
       setDeletingId(null);
+      setDeleteModalState({ isOpen: false, agentId: null, agentName: "" });
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (!deletingId) {
+      setDeleteModalState({ isOpen: false, agentId: null, agentName: "" });
     }
   };
 
@@ -150,6 +178,13 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
           </tbody>
         </table>
       </div>
+      <DeleteAgentModal
+        isOpen={deleteModalState.isOpen}
+        agentName={deleteModalState.agentName}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        isDeleting={!!deletingId}
+      />
     </div>
   );
 }
