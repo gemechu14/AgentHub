@@ -8,6 +8,7 @@ import { useChatContext } from "@/contexts/ChatContext";
 import { ChatMessage } from "@/features/chat/components/ChatMessage";
 import { MessageInput } from "@/features/chat/components/MessageInput";
 import { AgentSelector } from "@/features/chat/components/AgentSelector";
+import { ThinkingIndicator } from "@/features/chat/components/ThinkingIndicator";
 
 function ChatContent() {
   const router = useRouter();
@@ -113,21 +114,7 @@ function ChatContent() {
                 />
               ))}
               {isSending && (
-                <div className="flex justify-start px-4 py-6">
-                  <div className="w-full">
-                    <div className="max-w-[85%] md:max-w-[80%]">
-                      <div className="rounded-2xl rounded-bl-sm bg-slate-100 px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]"></div>
-                            <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]"></div>
-                            <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <ThinkingIndicator />
               )}
               <div ref={messagesEndRef} />
             </div>

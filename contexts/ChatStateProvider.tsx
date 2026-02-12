@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAgents } from "@/hooks/useAgents";
 import { useChat } from "@/hooks/useChat";
 import { ChatProvider } from "@/contexts/ChatContext";
+import { DeleteChatModal } from "@/features/chat/components/DeleteChatModal";
 import type { Agent } from "@/types/agent";
 
 /**
@@ -94,6 +95,18 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
     return null;
   });
 
+  // Delete modal state
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    chatId: string | null;
+    chatTitle: string;
+  }>({
+    isOpen: false,
+    chatId: null,
+    chatTitle: "",
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (currentChatId) {
@@ -140,15 +153,38 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
     routerRef.current.replace("/chat?chatId=" + encodeURIComponent(chatId));
   }, []);
 
-  const handleDeleteChat = useCallback(async (chatId: string) => {
-    if (!confirm("Are you sure you want to delete this chat?")) return;
+  const handleDeleteChat = useCallback((chatId: string) => {
+    // Find the chat to get its title
+    const chat = chats.find((c) => c.id === chatId);
+    if (chat) {
+      setDeleteModalState({
+        isOpen: true,
+        chatId,
+        chatTitle: chat.title,
+      });
+    }
+  }, [chats]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteModalState.chatId) return;
+    
+    setIsDeleting(true);
     try {
-      await deleteChatRef.current(chatId);
-      setCurrentChatId((prev) => (prev === chatId ? null : prev));
+      await deleteChatRef.current(deleteModalState.chatId);
+      setCurrentChatId((prev) => (prev === deleteModalState.chatId ? null : prev));
+      setDeleteModalState({ isOpen: false, chatId: null, chatTitle: "" });
     } catch (err) {
       console.error("Failed to delete chat:", err);
+    } finally {
+      setIsDeleting(false);
     }
-  }, []);
+  }, [deleteModalState.chatId]);
+
+  const handleCloseDeleteModal = useCallback(() => {
+    if (!isDeleting) {
+      setDeleteModalState({ isOpen: false, chatId: null, chatTitle: "" });
+    }
+  }, [isDeleting]);
 
   const handleRenameChat = useCallback(async (chatId: string, newTitle: string) => {
     try {
@@ -160,6 +196,19 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
 
   // Memoize chats to maintain stable reference
   const memoizedChats = useMemo(() => chats, [chats]);
+
+  // Wrapper functions to match interface (returns Promise<void>)
+  const loadChatWrapper = useCallback(async (chatId: string) => {
+    await loadChat(chatId);
+  }, [loadChat]);
+
+  const sendMessageWrapper = useCallback(async (chatId: string, content: string) => {
+    await sendMessage(chatId, content);
+  }, [sendMessage]);
+
+  const updateTitleWrapper = useCallback(async (chatId: string, newTitle: string) => {
+    await updateTitle(chatId, newTitle);
+  }, [updateTitle]);
 
   // Memoize the entire context value - only changes when actual data changes
   const contextValue = useMemo(
@@ -174,11 +223,11 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
       isSending: isSending || false,
       error: chatError || null,
       createNewChat,
-      loadChat,
-      sendMessage,
+      loadChat: loadChatWrapper,
+      sendMessage: sendMessageWrapper,
       updateMessage,
       editAndResend,
-      updateTitle,
+      updateTitle: updateTitleWrapper,
       deleteChat,
       handleNewChat,
       handleSelectChat,
@@ -195,11 +244,11 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
       isSending,
       chatError,
       createNewChat,
-      loadChat,
-      sendMessage,
+      loadChatWrapper,
+      sendMessageWrapper,
       updateMessage,
       editAndResend,
-      updateTitle,
+      updateTitleWrapper,
       deleteChat,
       handleNewChat,
       handleSelectChat,
@@ -208,6 +257,17 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
     ]
   );
 
-  return <ChatProvider value={contextValue}>{children}</ChatProvider>;
+  return (
+    <>
+      <ChatProvider value={contextValue}>{children}</ChatProvider>
+      <DeleteChatModal
+        isOpen={deleteModalState.isOpen}
+        chatTitle={deleteModalState.chatTitle}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
+    </>
+  );
 }
 

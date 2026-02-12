@@ -17,7 +17,8 @@ export interface TeamMemberResponse {
 
 export interface InviteMemberRequest {
   email: string;
-  role: string; // "MEMBER" or "ADMIN"
+  role: string; // "MEMBER" or "ADMIN" or "OWNER"
+  manage_agent_ids?: string[]; // Only included if role is MEMBER
 }
 
 export interface UpdateMemberPermissionsRequest {

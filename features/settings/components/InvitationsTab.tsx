@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAgents } from "@/hooks/useAgents";
 import { teamService } from "@/services/teamService";
 import { TeamMember } from "@/types/team";
 import { ArrowUp, AlertCircle } from "lucide-react";
@@ -10,16 +11,30 @@ import { ToastContainer, useToast } from "@/components/ui/Toast";
 export function InvitationsTab() {
   const { user } = useAuth();
   const { toasts, showToast, removeToast } = useToast();
+  const { data: agents, isLoading: agentsLoading } = useAgents();
 
   // Invitation form state
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("MEMBER");
+  const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   // Pending invitations
   const [pendingMembers, setPendingMembers] = useState<TeamMember[]>([]);
   const [pendingLoading, setPendingLoading] = useState(true);
+
+  // Check if agents exist
+  const hasAgents = useMemo(() => {
+    return agents && agents.length > 0;
+  }, [agents]);
+
+  // Reset selected agents when role changes
+  useEffect(() => {
+    if (inviteRole !== "MEMBER") {
+      setSelectedAgentIds([]);
+    }
+  }, [inviteRole]);
 
   // Get account ID from user profile
   const getAccountId = (): string | null => {
@@ -82,13 +97,40 @@ export function InvitationsTab() {
       return;
     }
 
+    // Validate MEMBER role requirements
+    if (inviteRole.toUpperCase() === "MEMBER") {
+      // Check if agents exist
+      if (!hasAgents) {
+        setInviteError("Cannot invite members: No agents available. Please create at least one agent first.");
+        return;
+      }
+
+      // Check if at least one agent is selected
+      if (selectedAgentIds.length === 0) {
+        setInviteError("Please select at least one agent for the member");
+        return;
+      }
+    }
+
     setInviteLoading(true);
 
     try {
-      await teamService.inviteMember(accountId, {
+      // Build payload conditionally
+      const payload: {
+        email: string;
+        role: string;
+        manage_agent_ids?: string[];
+      } = {
         email: inviteEmail,
         role: inviteRole.toUpperCase(),
-      });
+      };
+
+      // Only include manage_agent_ids if role is MEMBER
+      if (inviteRole.toUpperCase() === "MEMBER") {
+        payload.manage_agent_ids = selectedAgentIds;
+      }
+
+      await teamService.inviteMember(accountId, payload);
 
       // Add new member to pending list
       const newMember: TeamMember = {
@@ -101,6 +143,7 @@ export function InvitationsTab() {
       // Reset form
       setInviteEmail("");
       setInviteRole("MEMBER");
+      setSelectedAgentIds([]);
       showToast("Invitation sent successfully", "success");
     } catch (error) {
       console.error("Failed to send invitation:", error);
@@ -164,13 +207,63 @@ export function InvitationsTab() {
 
               <button
                 type="submit"
-                disabled={inviteLoading}
+                disabled={inviteLoading || (inviteRole === "MEMBER" && !hasAgents)}
                 className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <ArrowUp className="w-4 h-4" />
                 {inviteLoading ? "Sending..." : "Send Invite"}
               </button>
             </div>
+
+            {/* Agent Selection - Only show for MEMBER role */}
+            {inviteRole === "MEMBER" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-900 mb-2">
+                  Assign Agents <span className="text-red-500">*</span>
+                </label>
+                {agentsLoading ? (
+                  <p className="text-sm text-slate-500">Loading agents...</p>
+                ) : !hasAgents ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-sm text-amber-800">
+                      No agents available. Please create at least one agent before inviting members.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-slate-300 bg-white p-4 max-h-48 overflow-y-auto">
+                    <div className="space-y-2">
+                      {agents?.map((agent) => (
+                        <label
+                          key={agent.id}
+                          className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-2 rounded"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedAgentIds.includes(agent.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedAgentIds((prev) => [...prev, agent.id]);
+                              } else {
+                                setSelectedAgentIds((prev) =>
+                                  prev.filter((id) => id !== agent.id)
+                                );
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-slate-900">{agent.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {selectedAgentIds.length === 0 && (
+                      <p className="text-xs text-red-600 mt-2">
+                        Please select at least one agent
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {inviteError && (
               <p className="text-sm text-red-600 flex items-center gap-1">

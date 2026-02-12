@@ -98,6 +98,10 @@ export function AppShell({
   const userFullName = getUserFullName(user);
   const userEmail = user?.email || "";
 
+  // Get user's role from memberships
+  const userRole = user?.memberships?.[0]?.role?.toUpperCase();
+  const isMember = userRole === "MEMBER";
+
   useEffect(() => {
     if (isProfileMenuOpen && profileButtonRef.current) {
       const rect = profileButtonRef.current.getBoundingClientRect();
@@ -172,13 +176,15 @@ export function AppShell({
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={isCollapsed}
               />
-              <NavItem
-                href="/admin"
-                label="Admin Portal"
-                icon={<Shield className="w-5 h-5" />}
-                isActive={pathname.startsWith("/admin")}
-                isCollapsed={isCollapsed}
-              />
+              {!isMember && (
+                <NavItem
+                  href="/admin"
+                  label="Admin Portal"
+                  icon={<Shield className="w-5 h-5" />}
+                  isActive={pathname.startsWith("/admin")}
+                  isCollapsed={isCollapsed}
+                />
+              )}
               <div className="relative overflow-visible">
                 <button
                   ref={profileButtonRef}
@@ -241,13 +247,15 @@ export function AppShell({
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={false}
               />
-              <NavItem
-                href="/admin"
-                label="Admin Portal"
-                icon={<Shield className="w-5 h-5" />}
-                isActive={pathname.startsWith("/admin")}
-                isCollapsed={false}
-              />
+              {!isMember && (
+                <NavItem
+                  href="/admin"
+                  label="Admin Portal"
+                  icon={<Shield className="w-5 h-5" />}
+                  isActive={pathname.startsWith("/admin")}
+                  isCollapsed={false}
+                />
+              )}
               <div className="relative">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
