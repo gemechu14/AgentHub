@@ -350,26 +350,27 @@ export function useChat(agentId: string | null) {
   );
 
   // Edit a message and resend (ChatGPT-like behavior)
-  // Updates the user message, removes all subsequent messages, and gets a new AI response
+  // Updates the user message, removes all subsequent messages, sends the edited
+  // content to the AI, and displays only the new response.
   const editAndResend = useCallback(
     async (chatId: string, messageId: string, newContent: string) => {
       if (!accountId || !agentId) return;
 
       try {
-        // 1. Set isSending to show typing indicator
-        setState((prev) => ({ ...prev, isSending: true, error: null }));
-
-        // 2. Optimistically update the message and remove all messages after it
+        // 1. Optimistically update the edited message and remove all messages after it,
+        //    then show the typing indicator (isSending = true)
         setState((prev) => {
           if (!prev.currentChat || prev.currentChat.id !== chatId) {
-            return prev;
+            return { ...prev, isSending: true, error: null };
           }
           const messageIndex = prev.currentChat.messages.findIndex(
             (msg) => msg.id === messageId
           );
-          if (messageIndex === -1) return prev;
+          if (messageIndex === -1) {
+            return { ...prev, isSending: true, error: null };
+          }
 
-          // Keep messages up to and including the edited one, update its content
+          // Keep only messages up to (and including) the edited one
           const trimmedMessages = prev.currentChat.messages
             .slice(0, messageIndex + 1)
             .map((msg) =>
@@ -378,6 +379,8 @@ export function useChat(agentId: string | null) {
 
           return {
             ...prev,
+            isSending: true,
+            error: null,
             currentChat: {
               ...prev.currentChat,
               messages: trimmedMessages,
@@ -385,24 +388,38 @@ export function useChat(agentId: string | null) {
           };
         });
 
-        // 3. Call updateMessage API to persist the edit
-        await updateMessage(
-          accountId,
-          agentId,
-          chatId,
-          messageId,
-          { content: newContent }
-        );
+        // 2. Persist the text edit on the backend (fire-and-forget style, don't block)
+        updateMessage(accountId, agentId, chatId, messageId, {
+          content: newContent,
+        }).catch(() => {
+          // Non-critical: the text update failed but we still want the new response
+        });
 
-        // 4. Reload the chat to get the regenerated response from the backend
-        const chat = await getChat(accountId, agentId, chatId);
-        setState((prev) => ({
-          ...prev,
-          currentChat: chat,
-          isSending: false,
-        }));
+        // 3. Send the edited content as a new message to get a fresh AI response
+        const response = await sendMessage(accountId, agentId, chatId, {
+          content: newContent,
+        });
+
+        // 4. Append ONLY the AI response to the trimmed messages (skip the
+        //    duplicate user message the backend created)
+        setState((prev) => {
+          if (!prev.currentChat || prev.currentChat.id !== chatId) {
+            return { ...prev, isSending: false };
+          }
+          return {
+            ...prev,
+            isSending: false,
+            currentChat: {
+              ...prev.currentChat,
+              messages: [...prev.currentChat.messages, response.message],
+            },
+          };
+        });
+
+        // 5. Silently refresh the sidebar chat list (title / message_count may have changed)
+        loadChats(true).catch(() => {});
       } catch (err) {
-        // On error, reload the chat to restore correct state
+        // On error, reload the full chat to restore the correct state
         try {
           const chat = await getChat(accountId, agentId, chatId);
           setState((prev) => ({
@@ -427,7 +444,7 @@ export function useChat(agentId: string | null) {
         throw err;
       }
     },
-    [accountId, agentId]
+    [accountId, agentId, loadChats]
   );
 
   // Delete a chat

@@ -200,13 +200,10 @@ export function ChatMessage({ message, onEdit }: ChatMessageProps) {
           isUser ? "flex-row-reverse justify-end" : "flex-row justify-start"
         }`}
       >
-        <div
-          className={`max-w-[85%] md:max-w-[80%] ${
-            isUser ? "ml-auto" : "mr-auto"
-          }`}
-        >
-          {isEditing ? (
-            <div className="w-full max-w-[600px]">
+        {isEditing ? (
+          // Edit mode: Full width container like ChatGPT
+          <div className="w-full -mx-4 px-4">
+            <div className="mx-auto max-w-3xl">
               {/* Edit textarea container */}
               <div className="rounded-2xl border border-slate-300 bg-white shadow-sm overflow-hidden focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
                 <textarea
@@ -252,7 +249,13 @@ export function ChatMessage({ message, onEdit }: ChatMessageProps) {
                 </button>
               </div>
             </div>
-          ) : (
+          </div>
+        ) : (
+          <div
+            className={`max-w-[85%] md:max-w-[80%] ${
+              isUser ? "ml-auto" : "mr-auto"
+            }`}
+          >
             <div
               className={`rounded-2xl px-4 py-3 text-sm ${
                 isUser
@@ -279,49 +282,49 @@ export function ChatMessage({ message, onEdit }: ChatMessageProps) {
                 </div>
               )}
             </div>
-          )}
-          {/* Action buttons on hover (user messages only) */}
-          {isUser && !isEditing && (
-            <div className="flex items-center justify-end gap-0.5 mt-1 opacity-0 transition-opacity group-hover:opacity-100">
-              <button
-                onClick={handleCopy}
-                className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                title="Copy"
-              >
-                {isCopying ? (
-                  <Check className="w-3.5 h-3.5 text-green-500" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
-              {onEdit && (
+            {/* Action buttons on hover (user messages only) */}
+            {isUser && (
+              <div className="flex items-center justify-end gap-0.5 mt-1 opacity-0 transition-opacity group-hover:opacity-100">
                 <button
-                  onClick={handleEdit}
+                  onClick={handleCopy}
                   className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                  title="Edit message"
+                  title="Copy"
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  {isCopying ? (
+                    <Check className="w-3.5 h-3.5 text-green-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                 </button>
-              )}
-            </div>
-          )}
-          {/* Copy button for assistant messages */}
-          {!isUser && !isEditing && (
-            <div className="flex items-center gap-0.5 mt-1 opacity-0 transition-opacity group-hover:opacity-100">
-              <button
-                onClick={handleCopy}
-                className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                title="Copy"
-              >
-                {isCopying ? (
-                  <Check className="w-3.5 h-3.5 text-green-500" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
+                {onEdit && (
+                  <button
+                    onClick={handleEdit}
+                    className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                    title="Edit message"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
                 )}
-              </button>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+            {/* Copy button for assistant messages */}
+            {!isUser && (
+              <div className="flex items-center gap-0.5 mt-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  title="Copy"
+                >
+                  {isCopying ? (
+                    <Check className="w-3.5 h-3.5 text-green-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
