@@ -12,6 +12,10 @@ export interface MessageCreate {
   content: string;
 }
 
+export interface MessageUpdate {
+  content: string;
+}
+
 // Response Types
 export interface ChatOut {
   id: string;

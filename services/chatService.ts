@@ -6,6 +6,7 @@ import type {
   ChatListOut,
   ChatWithMessagesOut,
   MessageCreate,
+  MessageUpdate,
   MessageResponse,
   DeleteChatResponse,
 } from "@/types/chat";
@@ -91,6 +92,23 @@ export async function sendMessage(
 ): Promise<MessageResponse> {
   return api.post<MessageResponse>(
     `/chats/${accountId}/${agentId}/${chatId}/messages`,
+    data
+  );
+}
+
+/**
+ * Update a message in a chat
+ * PATCH /chats/{account_id}/{agent_id}/{chat_id}/messages/{message_id}
+ */
+export async function updateMessage(
+  accountId: string,
+  agentId: string,
+  chatId: string,
+  messageId: string,
+  data: MessageUpdate
+): Promise<ChatMessageOut> {
+  return api.patch<ChatMessageOut>(
+    `/chats/${accountId}/${agentId}/${chatId}/messages/${messageId}`,
     data
   );
 }

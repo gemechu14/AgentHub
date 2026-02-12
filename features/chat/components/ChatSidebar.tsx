@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { FileText, NotebookPen, Trash2, Pencil } from "lucide-react";
 import type { ChatOut } from "@/types/chat";
 
@@ -15,7 +15,7 @@ interface ChatSidebarProps {
   isCollapsed?: boolean;
 }
 
-export function ChatSidebar({
+function ChatSidebarComponent({
   chats,
   currentChatId,
   onNewChat,
@@ -26,6 +26,24 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Preserve scroll position
+  useEffect(() => {
+    if (scrollContainerRef.current && typeof window !== "undefined") {
+      const savedScroll = sessionStorage.getItem("chatSidebarScroll");
+      if (savedScroll) {
+        scrollContainerRef.current.scrollTop = parseInt(savedScroll, 10);
+      }
+    }
+  }, []);
+
+  // Save scroll position
+  const handleScroll = () => {
+    if (scrollContainerRef.current && typeof window !== "undefined") {
+      sessionStorage.setItem("chatSidebarScroll", String(scrollContainerRef.current.scrollTop));
+    }
+  };
 
   const handleStartEdit = (chat: ChatOut) => {
     setEditingId(chat.id);
@@ -59,7 +77,11 @@ export function ChatSidebar({
       </div>
 
       {/* Recent Chats */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-2">
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 min-h-0 overflow-y-auto px-2 pb-2"
+      >
         <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
           RECENT CHATS
         </div>
@@ -129,4 +151,28 @@ export function ChatSidebar({
     </div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export const ChatSidebar = memo(ChatSidebarComponent, (prevProps, nextProps) => {
+  // Re-render if loading state changes
+  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  
+  // Re-render if current chat changes
+  if (prevProps.currentChatId !== nextProps.currentChatId) return false;
+  
+  // Re-render if chats array length changes
+  if (prevProps.chats.length !== nextProps.chats.length) return false;
+  
+  // Re-render if any chat changed (check by reference first for performance)
+  if (prevProps.chats === nextProps.chats) return true; // Same reference, no change
+  
+  // Deep check if chats array changed
+  const chatsChanged = prevProps.chats.some((chat, index) => {
+    const nextChat = nextProps.chats[index];
+    return !nextChat || chat.id !== nextChat.id || chat.title !== nextChat.title || chat.updated_at !== nextChat.updated_at;
+  });
+  
+  // Return true to skip re-render if nothing changed
+  return !chatsChanged;
+});
 

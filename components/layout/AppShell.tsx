@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bot, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut, Shield } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Bot, Settings, ChevronLeft, ChevronRight, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { APP_NAME } from "@/lib/config";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAgents } from "@/hooks/useAgents";
+import { ChatNavSection } from "@/components/layout/ChatNavSection";
+import { useChatContext } from "@/contexts/ChatContext";
 
 interface AppShellProps {
   children: ReactNode;
@@ -67,13 +67,28 @@ export function AppShell({
   children,
   title = "Dashboard",
 }: AppShellProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const { user, logout, isLoading: authLoading } = useAuth();
-  const { data: agents } = useAgents();
-  const [agentsOpen, setAgentsOpen] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Read selectedAgent from context (state lives in ChatStateProvider)
+  const { selectedAgent } = useChatContext();
+
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebarCollapsed");
+      return saved === "true";
+    }
+    return false;
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Persist sidebar collapse state
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sidebarCollapsed", String(isCollapsed));
+    }
+  }, [isCollapsed]);
+
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
@@ -86,12 +101,10 @@ export function AppShell({
   useEffect(() => {
     if (isProfileMenuOpen && profileButtonRef.current) {
       const rect = profileButtonRef.current.getBoundingClientRect();
-      // Calculate dropdown height (approximately 120px) and position it above the button
-      // Position it higher so the button remains visible below the dropdown
       const dropdownHeight = 120;
-      const buttonHeight = 40; // Approximate button height
+      const buttonHeight = 40;
       setDropdownPosition({
-        top: rect.top - dropdownHeight - buttonHeight - 12, // Position higher with more gap
+        top: rect.top - dropdownHeight - buttonHeight - 12,
         left: isCollapsed ? rect.left : rect.left,
       });
     }
@@ -145,89 +158,13 @@ export function AppShell({
             )}
           </div>
 
-          <nav className="flex flex-1 flex-col overflow-y-auto py-4 px-2">
-            <div className="flex-grow space-y-1">
-              {/* Dashboard hidden - redirecting to chat instead */}
-              {/* <NavItem
-                href="/dashboard"
-                label="Dashboard"
-                icon={<LayoutDashboard className="w-5 h-5" />}
-                isActive={pathname === "/dashboard"}
-                isCollapsed={isCollapsed}
-              /> */}
+          <nav className="flex flex-1 flex-col overflow-hidden">
+            {/* Chat Navigation Section - Reads from persistent context */}
+            {selectedAgent && (
+              <ChatNavSection isCollapsed={isCollapsed} />
+            )}
 
-              <div>
-                <div className="relative">
-                  <NavItem
-                    href="/agents"
-                    label="Agents"
-                    icon={<Bot className="w-5 h-5" />}
-                    isActive={pathname.startsWith("/agents")}
-                    isCollapsed={isCollapsed}
-                  />
-                  {!isCollapsed && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setAgentsOpen((open) => !open);
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-transform"
-                    >
-                      <span
-                        className={`transition-transform ${
-                          agentsOpen ? "rotate-0" : "-rotate-90"
-                        }`}
-                      >
-                        ▾
-                      </span>
-                    </button>
-                  )}
-                </div>
-                {agentsOpen && !isCollapsed && (
-                  <div className="mt-2 space-y-1 pl-1">
-                    <div className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                      My Agents
-                    </div>
-                    <div className="mt-2 space-y-1 pl-1">
-                      {agents && agents.length > 0 ? (
-                        agents.slice(0, 5).map((agent) => (
-                          <Link
-                            key={agent.id}
-                            href={`/agents/${agent.id}`}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-                              pathname === `/agents/${agent.id}`
-                                ? "bg-slate-800/70 text-white"
-                                : agent.status === "active"
-                                ? "text-slate-300 hover:bg-slate-800/50"
-                                : "text-slate-400 hover:bg-slate-800/50"
-                            }`}
-                          >
-                            <span
-                              className={`h-2 w-2 rounded-full ${
-                                agent.status === "active"
-                                  ? "bg-emerald-500"
-                                  : agent.status === "draft"
-                                  ? "bg-yellow-500"
-                                  : "bg-slate-600"
-                              }`}
-                            />
-                            <span className="truncate">{agent.name}</span>
-                          </Link>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-xs text-slate-500">
-                          No agents yet
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-auto p-2 border-t border-slate-800/50 space-y-1 overflow-visible">
+            <div className="flex-shrink-0 mt-auto p-2 border-t border-slate-800/50 space-y-1">
               <NavItem
                 href="/settings"
                 label="Settings"
@@ -259,7 +196,6 @@ export function AppShell({
                     </span>
                   )}
                 </button>
-
               </div>
             </div>
           </nav>
@@ -291,84 +227,10 @@ export function AppShell({
 
           <nav className="flex flex-1 flex-col overflow-y-auto py-4 px-2">
             <div className="flex-grow space-y-6">
-              {/* Dashboard hidden - redirecting to chat instead */}
-              {/* <div>
-                <NavItem
-                  href="/dashboard"
-                  label="Dashboard"
-                  icon={<LayoutDashboard className="w-5 h-5" />}
-                  isActive={pathname === "/dashboard"}
-                  isCollapsed={false}
-                />
-              </div> */}
-
-              <div>
-                <div className="relative">
-                  <NavItem
-                    href="/agents"
-                    label="Agents"
-                    icon={<Bot className="w-5 h-5" />}
-                    isActive={pathname.startsWith("/agents")}
-                    isCollapsed={false}
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setAgentsOpen((open) => !open);
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-transform"
-                  >
-                    <span
-                      className={`transition-transform ${
-                        agentsOpen ? "rotate-0" : "-rotate-90"
-                      }`}
-                    >
-                      ▾
-                    </span>
-                  </button>
-                </div>
-                {agentsOpen && (
-                  <div className="mt-2 space-y-1 pl-1">
-                    <div className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                      My Agents
-                    </div>
-                    <div className="mt-2 space-y-1 pl-1">
-                      {agents && agents.length > 0 ? (
-                        agents.slice(0, 5).map((agent) => (
-                          <Link
-                            key={agent.id}
-                            href={`/agents/${agent.id}`}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-                              pathname === `/agents/${agent.id}`
-                                ? "bg-slate-800/70 text-white"
-                                : agent.status === "active"
-                                ? "text-slate-300 hover:bg-slate-800/50"
-                                : "text-slate-400 hover:bg-slate-800/50"
-                            }`}
-                          >
-                            <span
-                              className={`h-2 w-2 rounded-full ${
-                                agent.status === "active"
-                                  ? "bg-emerald-500"
-                                  : agent.status === "draft"
-                                  ? "bg-yellow-500"
-                                  : "bg-slate-600"
-                              }`}
-                            />
-                            <span className="truncate">{agent.name}</span>
-                          </Link>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-xs text-slate-500">
-                          No agents yet
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Mobile chat section */}
+              {selectedAgent && (
+                <ChatNavSection isCollapsed={false} />
+              )}
             </div>
 
             <div className="mt-auto p-2 border-t border-slate-800/50 space-y-1">
@@ -447,22 +309,24 @@ export function AppShell({
         </aside>
 
         <main className="flex-1 flex flex-col overflow-hidden bg-white">
-          <header className="flex-shrink-0 border-b border-slate-200 px-4 py-4 md:px-10">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              <h1 className="text-lg font-semibold tracking-tight text-slate-900">
-                {title}
-              </h1>
-            </div>
-          </header>
+          {!pathname.startsWith("/chat") && (
+            <header className="flex-shrink-0 border-b border-slate-200 px-4 py-4 md:px-10">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                  aria-label="Open menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                <h1 className="text-lg font-semibold tracking-tight text-slate-900">
+                  {title}
+                </h1>
+              </div>
+            </header>
+          )}
 
-          <div className="flex-1 overflow-y-auto px-4 py-6 md:px-10 md:py-8">
+          <div className={`flex-1 overflow-y-auto ${pathname.startsWith("/chat") ? "px-0 py-0" : "px-4 py-6 md:px-10 md:py-8"}`}>
             {children}
           </div>
         </main>
@@ -524,4 +388,3 @@ export function AppShell({
     </div>
   );
 }
-
