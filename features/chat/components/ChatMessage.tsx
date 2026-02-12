@@ -1,8 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { Copy, Pencil, Check } from "lucide-react";
 import type { ChatMessageOut } from "@/types/chat";
+
+/**
+ * Parses markdown-style text into React elements.
+ * Supports: **bold**, *italic*, `inline code`, ```code blocks```, and newlines.
+ */
+function renderMarkdown(text: string): ReactNode[] {
+  const elements: ReactNode[] = [];
+  
+  // Split by code blocks first (```...```)
+  const codeBlockParts = text.split(/(```[\s\S]*?```)/g);
+  
+  codeBlockParts.forEach((part, blockIdx) => {
+    // Code block
+    if (part.startsWith("```") && part.endsWith("```")) {
+      const inner = part.slice(3, -3);
+      // Remove optional language identifier on first line
+      const firstNewline = inner.indexOf("\n");
+      const code = firstNewline >= 0 ? inner.slice(firstNewline + 1) : inner;
+      elements.push(
+        <pre key={`cb-${blockIdx}`} className="my-2 rounded-lg bg-black/10 p-3 text-xs overflow-x-auto font-mono">
+          <code>{code}</code>
+        </pre>
+      );
+      return;
+    }
+
+    // For non-code-block text, parse inline markdown
+    // Split into lines to preserve whitespace
+    const lines = part.split("\n");
+    lines.forEach((line, lineIdx) => {
+      if (lineIdx > 0) {
+        elements.push(<br key={`br-${blockIdx}-${lineIdx}`} />);
+      }
+
+      // Parse inline formatting: **bold**, *italic*, `code`
+      // Regex matches: **bold**, *italic*, `code`, or plain text
+      const inlineRegex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+?)`)/g;
+      let lastIndex = 0;
+      let match;
+      const lineKey = `${blockIdx}-${lineIdx}`;
+
+      while ((match = inlineRegex.exec(line)) !== null) {
+        // Push plain text before this match
+        if (match.index > lastIndex) {
+          elements.push(
+            <span key={`t-${lineKey}-${lastIndex}`}>
+              {line.slice(lastIndex, match.index)}
+            </span>
+          );
+        }
+
+        if (match[2] !== undefined) {
+          // **bold**
+          elements.push(
+            <strong key={`b-${lineKey}-${match.index}`} className="font-semibold">
+              {match[2]}
+            </strong>
+          );
+        } else if (match[3] !== undefined) {
+          // *italic*
+          elements.push(
+            <em key={`i-${lineKey}-${match.index}`}>
+              {match[3]}
+            </em>
+          );
+        } else if (match[4] !== undefined) {
+          // `inline code`
+          elements.push(
+            <code
+              key={`c-${lineKey}-${match.index}`}
+              className="rounded bg-black/10 px-1.5 py-0.5 text-xs font-mono"
+            >
+              {match[4]}
+            </code>
+          );
+        }
+
+        lastIndex = match.index + match[0].length;
+      }
+
+      // Push remaining plain text
+      if (lastIndex < line.length) {
+        elements.push(
+          <span key={`t-${lineKey}-${lastIndex}`}>
+            {line.slice(lastIndex)}
+          </span>
+        );
+      }
+    });
+  });
+
+  return elements;
+}
 
 interface ChatMessageProps {
   message: ChatMessageOut;
@@ -11,6 +104,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, onEdit }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const renderedContent = useMemo(() => renderMarkdown(message.content), [message.content]);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [isCopying, setIsCopying] = useState(false);
@@ -112,7 +206,7 @@ export function ChatMessage({ message, onEdit }: ChatMessageProps) {
               }`}
             >
               <div className="whitespace-pre-wrap leading-relaxed">
-                {message.content}
+                {renderedContent}
               </div>
               {message.final_dax && (
                 <details className="mt-3">
