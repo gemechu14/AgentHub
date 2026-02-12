@@ -18,6 +18,7 @@ export interface ChatContextValue {
   loadChat: (chatId: string) => Promise<void>;
   sendMessage: (chatId: string, content: string) => Promise<void>;
   updateMessage: (chatId: string, messageId: string, newContent: string) => Promise<void>;
+  editAndResend: (chatId: string, messageId: string, newContent: string) => Promise<void>;
   updateTitle: (chatId: string, newTitle: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
   handleNewChat: () => void;

@@ -81,6 +81,7 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
     loadChat,
     sendMessage,
     updateMessage,
+    editAndResend,
     updateTitle,
     deleteChat,
   } = useChat(selectedAgent?.id || null);
@@ -176,6 +177,7 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
       loadChat,
       sendMessage,
       updateMessage,
+      editAndResend,
       updateTitle,
       deleteChat,
       handleNewChat,
@@ -196,6 +198,7 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
       loadChat,
       sendMessage,
       updateMessage,
+      editAndResend,
       updateTitle,
       deleteChat,
       handleNewChat,

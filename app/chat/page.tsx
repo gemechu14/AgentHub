@@ -27,7 +27,7 @@ function ChatContent() {
     error,
     loadChat,
     sendMessage,
-    updateMessage,
+    editAndResend,
   } = chatContext;
 
   // Load chat from URL query param
@@ -107,8 +107,7 @@ function ChatContent() {
                   message={message}
                   onEdit={async (messageId, newContent) => {
                     if (currentChatId) {
-                      await updateMessage(currentChatId, messageId, newContent);
-                      await loadChat(currentChatId);
+                      await editAndResend(currentChatId, messageId, newContent);
                     }
                   }}
                 />

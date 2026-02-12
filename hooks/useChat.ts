@@ -349,6 +349,87 @@ export function useChat(agentId: string | null) {
     [accountId, agentId]
   );
 
+  // Edit a message and resend (ChatGPT-like behavior)
+  // Updates the user message, removes all subsequent messages, and gets a new AI response
+  const editAndResend = useCallback(
+    async (chatId: string, messageId: string, newContent: string) => {
+      if (!accountId || !agentId) return;
+
+      try {
+        // 1. Set isSending to show typing indicator
+        setState((prev) => ({ ...prev, isSending: true, error: null }));
+
+        // 2. Optimistically update the message and remove all messages after it
+        setState((prev) => {
+          if (!prev.currentChat || prev.currentChat.id !== chatId) {
+            return prev;
+          }
+          const messageIndex = prev.currentChat.messages.findIndex(
+            (msg) => msg.id === messageId
+          );
+          if (messageIndex === -1) return prev;
+
+          // Keep messages up to and including the edited one, update its content
+          const trimmedMessages = prev.currentChat.messages
+            .slice(0, messageIndex + 1)
+            .map((msg) =>
+              msg.id === messageId ? { ...msg, content: newContent } : msg
+            );
+
+          return {
+            ...prev,
+            currentChat: {
+              ...prev.currentChat,
+              messages: trimmedMessages,
+            },
+          };
+        });
+
+        // 3. Call updateMessage API to persist the edit
+        await updateMessage(
+          accountId,
+          agentId,
+          chatId,
+          messageId,
+          { content: newContent }
+        );
+
+        // 4. Reload the chat to get the regenerated response from the backend
+        const chat = await getChat(accountId, agentId, chatId);
+        setState((prev) => ({
+          ...prev,
+          currentChat: chat,
+          isSending: false,
+        }));
+      } catch (err) {
+        // On error, reload the chat to restore correct state
+        try {
+          const chat = await getChat(accountId, agentId, chatId);
+          setState((prev) => ({
+            ...prev,
+            currentChat: chat,
+            isSending: false,
+          }));
+        } catch {
+          setState((prev) => ({ ...prev, isSending: false }));
+        }
+
+        const errorMessage =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+            ? err.message
+            : "Failed to edit message";
+        setState((prev) => ({
+          ...prev,
+          error: errorMessage,
+        }));
+        throw err;
+      }
+    },
+    [accountId, agentId]
+  );
+
   // Delete a chat
   const removeChat = useCallback(
     async (chatId: string) => {
@@ -419,6 +500,7 @@ export function useChat(agentId: string | null) {
     sendMessage: sendChatMessage,
     updateTitle,
     updateMessage: updateMessageContent,
+    editAndResend,
     deleteChat: removeChat,
   };
 }
