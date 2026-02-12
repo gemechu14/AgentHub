@@ -36,6 +36,11 @@ export interface Agent {
   account_id: string;
   created_at: string;
   updated_at?: string;
+  // Custom tone fields
+  custom_tone_schema_enabled?: boolean;
+  custom_tone_rows_enabled?: boolean;
+  custom_tone_schema?: string;
+  custom_tone_rows?: string;
 }
 
 // Request types for API
@@ -48,6 +53,11 @@ export interface CreateAgentRequest {
   system_instructions?: string;
   connection_type: ConnectionType;
   connection_config?: ConnectionConfig;
+  // Custom tone fields
+  custom_tone_schema_enabled?: boolean;
+  custom_tone_rows_enabled?: boolean;
+  custom_tone_schema?: string;
+  custom_tone_rows?: string;
 }
 
 export interface UpdateAgentRequest {
@@ -59,6 +69,11 @@ export interface UpdateAgentRequest {
   system_instructions?: string;
   connection_type?: ConnectionType;
   connection_config?: ConnectionConfig;
+  // Custom tone fields
+  custom_tone_schema_enabled?: boolean;
+  custom_tone_rows_enabled?: boolean;
+  custom_tone_schema?: string;
+  custom_tone_rows?: string;
 }
 
 // Response types
