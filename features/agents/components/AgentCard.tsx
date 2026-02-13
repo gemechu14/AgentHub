@@ -17,7 +17,7 @@ export function AgentCard({ agent }: AgentCardProps) {
     : "None";
 
   return (
-    <Link href={`/agents/${agent.id}`} className="block hover:scale-[1.02] transition-transform">
+    <Link href={`/agents/view?id=${agent.id}`} className="block hover:scale-[1.02] transition-transform">
       <Card>
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50">

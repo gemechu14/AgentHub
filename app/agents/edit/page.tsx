@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { EditAgentForm } from "@/features/agents/components/EditAgentForm";
@@ -9,10 +9,10 @@ import { getAgent, getAccountId } from "@/services/agentsService";
 import type { Agent } from "@/types/agent";
 
 export default function EditAgentPage() {
-  const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const agentId = params.id as string;
+  const agentId = searchParams.get("id") as string | null;
   
   const [agent, setAgent] = useState<Agent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +28,11 @@ export default function EditAgentPage() {
       }
 
       try {
+        if (!agentId) {
+          setError("No agent id provided");
+          setIsLoading(false);
+          return;
+        }
         const agentData = await getAgent(accountId, agentId);
         setAgent(agentData);
       } catch (err) {
@@ -76,4 +81,3 @@ export default function EditAgentPage() {
     </AppShell>
   );
 }
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Send, ChevronDown, ChevronRight, Database, Sparkles, AlertCircle, Info, X } from "lucide-react";
@@ -12,9 +12,9 @@ import { mapConnectionTypeFromAPI, mapModelTypeFromAPI } from "@/lib/agentHelper
 import type { Agent } from "@/types/agent";
 
 export default function TestAgentPage() {
-  const params = useParams();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
-  const agentId = params.id as string;
+  const agentId = searchParams.get("id") as string | null;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -27,7 +27,7 @@ export default function TestAgentPage() {
   // Initialize chat hook
   const chat = usePowerBIChat({
     accountId: accountId || "",
-    agentId: agentId,
+    agentId: agentId || "",
   });
 
   useEffect(() => {
@@ -42,6 +42,11 @@ export default function TestAgentPage() {
       setAccountId(id);
 
       try {
+        if (!agentId) {
+          setError("No agent id provided");
+          setIsLoading(false);
+          return;
+        }
         const agentData = await getAgent(id, agentId);
         setAgent(agentData);
       } catch (err) {
@@ -88,7 +93,7 @@ export default function TestAgentPage() {
 
   const isActive = agent.status === "active";
   const isDraft = agent.status === "draft";
-  const hasApiKeyExpired = false; // TODO: Check API key expiration from backend
+  const hasApiKeyExpired = false;
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) {
@@ -105,7 +110,6 @@ export default function TestAgentPage() {
     try {
       await chat.sendMessage(question);
     } catch (err) {
-      // Error is handled by the hook
       console.error("Failed to send message:", err);
     }
   };
@@ -134,7 +138,6 @@ export default function TestAgentPage() {
   return (
     <AppShell title="Test Agent">
       <div className="space-y-6">
-        {/* Back to Agents Link */}
         <Link
           href="/agents"
           className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
@@ -143,7 +146,6 @@ export default function TestAgentPage() {
           <span>Back to Agents</span>
         </Link>
 
-        {/* API Key Expired Alert (only for draft/expired agents) */}
         {isDraft && hasApiKeyExpired && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-start gap-3 mb-3">
@@ -161,7 +163,7 @@ export default function TestAgentPage() {
             </p>
             <div className="ml-8">
               <Link
-                href={`/agents/${agent.id}/edit`}
+                href={`/agents/edit?id=${agent.id}`}
                 className="inline-block rounded-lg border border-yellow-200 bg-white px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-yellow-50 transition-colors"
               >
                 Update API Key
@@ -170,7 +172,6 @@ export default function TestAgentPage() {
           </div>
         )}
 
-        {/* Agent Header */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <div className="flex items-start justify-between">
             <div>
@@ -191,7 +192,7 @@ export default function TestAgentPage() {
               </div>
             </div>
             <Link
-              href={`/agents/${agent.id}/edit`}
+              href={`/agents/edit?id=${agent.id}`}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
             >
               <svg
@@ -212,9 +213,7 @@ export default function TestAgentPage() {
           </div>
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chat Section */}
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
               <div className="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
@@ -228,8 +227,7 @@ export default function TestAgentPage() {
                   </button>
                 )}
               </div>
-              
-              {/* Chat Messages Area */}
+
               <div className="p-6 min-h-[400px] max-h-[600px] overflow-y-auto">
                 {chat.messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
@@ -259,7 +257,6 @@ export default function TestAgentPage() {
                   <div className="space-y-6">
                     {chat.messages.map((msg) => (
                       <div key={msg.id} className="space-y-3">
-                        {/* User Question */}
                         <div className="flex justify-end">
                           <div className="max-w-[80%] rounded-lg bg-slate-900 px-4 py-3 text-sm text-white">
                             <div className="text-xs font-medium opacity-90 mb-1">You</div>
@@ -267,12 +264,9 @@ export default function TestAgentPage() {
                           </div>
                         </div>
 
-                        {/* AI Response */}
                         <div className="flex justify-start">
                           <div className="max-w-[80%] rounded-lg bg-white border border-slate-200 px-4 py-3 text-sm text-slate-900 shadow-sm">
                             <div className="text-xs font-medium text-slate-500 mb-2">AI Assistant</div>
-                            
-                            {/* Resolution Note */}
                             {msg.response.resolution_note && (
                               <div className="mb-3 p-2 rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-900">
                                 <Info className="w-3 h-3 inline mr-1" />
@@ -280,12 +274,10 @@ export default function TestAgentPage() {
                               </div>
                             )}
 
-                            {/* Answer */}
                             <div className="whitespace-pre-wrap leading-relaxed mb-2">
                               {msg.response.answer}
                             </div>
 
-                            {/* DAX Query (Expandable) */}
                             {msg.response.action === "QUERY" && msg.response.final_dax && (
                               <details className="mt-3">
                                 <summary className="cursor-pointer text-xs font-medium text-blue-600 hover:text-blue-700 select-none">
@@ -297,7 +289,6 @@ export default function TestAgentPage() {
                               </details>
                             )}
 
-                            {/* Error Display */}
                             {msg.response.error && (
                               <div className="mt-3 p-2 rounded-md bg-red-50 border border-red-200 text-xs text-red-900">
                                 <AlertCircle className="w-3 h-3 inline mr-1" />
@@ -305,7 +296,6 @@ export default function TestAgentPage() {
                               </div>
                             )}
 
-                            {/* Action Badge */}
                             <div className="mt-2 text-xs text-slate-400">
                               {msg.response.action === "DESCRIBE" && "📋 Answered from schema"}
                               {msg.response.action === "QUERY" && "🔍 Executed DAX query"}
@@ -320,7 +310,6 @@ export default function TestAgentPage() {
                 )}
               </div>
 
-              {/* Error Display */}
               {chat.error && (
                 <div className="mx-6 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -337,7 +326,6 @@ export default function TestAgentPage() {
                 </div>
               )}
 
-              {/* Suggested Questions */}
               <div className="border-t border-slate-200 px-6 py-4">
                 <p className="text-xs font-medium text-slate-500 mb-3">Try asking:</p>
                 <div className="flex flex-wrap gap-2">
@@ -353,7 +341,6 @@ export default function TestAgentPage() {
                 </div>
               </div>
 
-              {/* Message Input */}
               <div className="border-t border-slate-200 px-6 py-4">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-3">
                   <input
@@ -392,17 +379,13 @@ export default function TestAgentPage() {
             </div>
           </div>
 
-          {/* Agent Info Sidebar */}
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 mb-2">
-                  AGENT INFO
-                </h3>
+                <h3 className="text-sm font-semibold text-slate-900 mb-2">AGENT INFO</h3>
                 <p className="text-sm text-slate-600">{agent.description}</p>
               </div>
 
-              {/* System Instructions */}
               <div className="border-t border-slate-200 pt-6">
                 <button
                   onClick={() => setSystemInstructionsOpen(!systemInstructionsOpen)}
@@ -422,13 +405,10 @@ export default function TestAgentPage() {
                 )}
               </div>
 
-              {/* Data Connection */}
               <div className="border-t border-slate-200 pt-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Database className="w-4 h-4 text-slate-500" />
-                  <h4 className="text-sm font-semibold text-slate-900">
-                    Data Connection
-                  </h4>
+                  <h4 className="text-sm font-semibold text-slate-900">Data Connection</h4>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <div className={`flex h-2 w-2 items-center justify-center rounded-full flex-shrink-0 ${
@@ -442,7 +422,6 @@ export default function TestAgentPage() {
                 </div>
               </div>
 
-              {/* AI Model */}
               <div className="border-t border-slate-200 pt-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-slate-500" />
@@ -451,29 +430,17 @@ export default function TestAgentPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">Model:</span>
-                    <span className="font-medium text-slate-900">
-                      {mapModelTypeFromAPI(agent.model_type)}
-                    </span>
+                    <span className="font-medium text-slate-900">{mapModelTypeFromAPI(agent.model_type)}</span>
                   </div>
                   {hasApiKeyExpired && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500">API Key:</span>
-                      <span className="flex items-center gap-1 text-red-600 text-xs font-medium">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Expired
-                      </span>
+                      <span className="flex items-center gap-1 text-red-600 text-xs font-medium">Expired</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Last Updated */}
               <div className="border-t border-slate-200 pt-6">
                 <p className="text-xs text-slate-500">
                   {agent.updated_at
@@ -490,4 +457,3 @@ export default function TestAgentPage() {
     </AppShell>
   );
 }
-

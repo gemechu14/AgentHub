@@ -782,7 +782,7 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => router.push(`/agents/${agent.id}`)}
+            onClick={() => router.push(`/agents/view?id=${agent.id}`)}
             className="rounded-lg border border-transparent px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
           >
             Cancel

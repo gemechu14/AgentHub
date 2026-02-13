@@ -1,7 +1,17 @@
-import type { NextConfig } from "next";
+import { join } from 'path';
 
-const nextConfig: NextConfig = {
-  distDir: "out",
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Static export output for static hosting
+  output: "export",
+  // Keep trailing slashes for exported files
+  trailingSlash: true,
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  images: {
+    unoptimized: true,
+  },
 };
 
-export default nextConfig;
+export default nextConfig; 

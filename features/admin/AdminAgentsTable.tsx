@@ -73,7 +73,7 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
   }
 
   const handleEdit = (agentId: string) => {
-    router.push(`/agents/${agentId}/edit`);
+    router.push(`/agents/edit?id=${agentId}`);
   };
 
   const handleDelete = (agentId: string) => {
