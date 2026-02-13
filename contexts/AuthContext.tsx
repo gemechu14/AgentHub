@@ -8,7 +8,7 @@ import { tokenStore } from "@/lib/tokenStore";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  signup: (email: string, password: string, firstName: string, lastName: string, invite?: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
   refreshUser: () => Promise<void>; // Legacy - use refreshProfile

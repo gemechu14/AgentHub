@@ -22,8 +22,7 @@ You can start editing the main dashboard by modifying `app/page.tsx`. The page a
 
 All data fetching goes through a small API client in `services/` using a configurable `BASE_API_URL` defined in `lib/config.ts`.
 
-- The default value is the local mock API: `/api/mock`.
-- To point the app at a real backend, set:
+To point the app at a real backend, set:
 
 ```bash
 export NEXT_PUBLIC_API_BASE_URL="https://api.agenthub.com"

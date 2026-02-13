@@ -1,26 +1,19 @@
 import type { Agent } from "@/types/agent";
 import { Badge } from "@/components/common/Badge";
-import { formatLastUsed } from "@/lib/format";
 
 interface AgentsTableProps {
   agents: Agent[];
 }
 
-function getTypeLabel(type: Agent["type"]) {
-  switch (type) {
-    case "custom":
-      return "Custom";
-    case "analyst":
-    case "analyst_agent":
-      return "Analyst Agent";
-    case "support":
-    case "support_agent":
-      return "Support Agent";
-    case "sales":
-    case "sales_agent":
-      return "Sales Agent";
+function getIntegrationLabel(connectionType: Agent["connection_type"]): string {
+  switch (connectionType) {
+    case "POWERBI":
+      return "Power BI";
+    case "DB":
+      return "Database";
+    case "NONE":
     default:
-      return type;
+      return "None";
   }
 }
 
@@ -40,10 +33,9 @@ export function AgentsTable({ agents }: AgentsTableProps) {
           <thead>
             <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3">Agent Name</th>
-              <th className="px-4 py-3">Type</th>
+              <th className="px-4 py-3">Integration</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Last Used</th>
-              <th className="px-4 py-3 text-right">Conversations (30d)</th>
+              <th className="px-4 py-3">Created</th>
             </tr>
           </thead>
           <tbody>
@@ -67,18 +59,15 @@ export function AgentsTable({ agents }: AgentsTableProps) {
                     </div>
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <Badge variant="default">{getTypeLabel(agent.type)}</Badge>
+                    <Badge variant="default">{getIntegrationLabel(agent.connection_type)}</Badge>
                   </td>
                   <td className="px-4 py-4 align-top">
                     <Badge variant={isActive ? "success" : "warning"}>
-                      {isActive ? "Active" : "Draft"}
+                      {isActive ? "Active" : agent.status === "draft" ? "Draft" : "Inactive"}
                     </Badge>
                   </td>
                   <td className="px-4 py-4 align-top text-slate-600">
-                    {formatLastUsed(agent.lastUsedAt)}
-                  </td>
-                  <td className="px-4 py-4 align-top text-right font-semibold text-slate-900">
-                    {agent.conversations30d}
+                    {new Date(agent.created_at).toLocaleDateString()}
                   </td>
                 </tr>
               );

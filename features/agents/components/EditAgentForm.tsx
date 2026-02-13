@@ -39,13 +39,15 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
   // Form state initialized with agent data
   const [agentName, setAgentName] = useState(agent.name);
   const [description, setDescription] = useState(agent.description || "");
-  const [status, setStatus] = useState<"draft" | "active">(agent.status);
+  const [status, setStatus] = useState<"draft" | "active">(
+    agent.status === "inactive" ? "draft" : agent.status
+  );
   
   const [aiModel, setAiModel] = useState(mapModelTypeFromAPI(agent.model_type));
   const [apiKey, setApiKey] = useState(""); // Don't show existing API key for security
   const [systemInstructions, setSystemInstructions] = useState(agent.system_instructions || "");
   // Custom tone fields — default enabled, initialize from agent data
-  const [customToneEnabled, setCustomToneEnabled] = useState(
+  const [customToneEnabled, setCustomToneEnabled] = useState<boolean>(
     agent.custom_tone_schema_enabled || agent.custom_tone_rows_enabled || true
   );
   const [customToneSchemaEnabled, setCustomToneSchemaEnabled] = useState(agent.custom_tone_schema_enabled || false);
@@ -228,7 +230,7 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
 
     try {
       await updateAgent(accountId, agent.id, payload);
-      router.push(`/agents/${agent.id}`);
+      router.push("/admin");
     } catch (err) {
       console.error("Failed to update agent:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to update agent. Please try again.";

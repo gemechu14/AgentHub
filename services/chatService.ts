@@ -9,6 +9,7 @@ import type {
   MessageUpdate,
   MessageResponse,
   DeleteChatResponse,
+  ChatMessageOut,
 } from "@/types/chat";
 
 /**

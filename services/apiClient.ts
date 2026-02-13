@@ -41,9 +41,9 @@ export async function apiClient<TResponse>(
   const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
 
   // Prepare headers
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(fetchOptions.headers ?? {}),
+    ...(fetchOptions.headers as Record<string, string> ?? {}),
   };
 
   // Add auth token if not skipped

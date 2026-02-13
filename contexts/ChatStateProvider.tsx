@@ -210,6 +210,10 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
     await updateTitle(chatId, newTitle);
   }, [updateTitle]);
 
+  const updateMessageWrapper = useCallback(async (chatId: string, messageId: string, newContent: string) => {
+    await updateMessage(chatId, messageId, newContent);
+  }, [updateMessage]);
+
   // Memoize the entire context value - only changes when actual data changes
   const contextValue = useMemo(
     () => ({
@@ -225,7 +229,7 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
       createNewChat,
       loadChat: loadChatWrapper,
       sendMessage: sendMessageWrapper,
-      updateMessage,
+      updateMessage: updateMessageWrapper,
       editAndResend,
       updateTitle: updateTitleWrapper,
       deleteChat,
@@ -246,7 +250,7 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
       createNewChat,
       loadChatWrapper,
       sendMessageWrapper,
-      updateMessage,
+      updateMessageWrapper,
       editAndResend,
       updateTitleWrapper,
       deleteChat,

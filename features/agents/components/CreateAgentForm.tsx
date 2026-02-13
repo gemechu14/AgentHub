@@ -192,8 +192,8 @@ export function CreateAgentForm() {
     setIsLoading(true);
 
     try {
-      const newAgent = await createAgent(accountId, payload);
-      router.push(`/agents/${newAgent.id}`);
+      await createAgent(accountId, payload);
+      router.push("/admin");
     } catch (err) {
       console.error("Failed to create agent:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to create agent. Please try again.";
