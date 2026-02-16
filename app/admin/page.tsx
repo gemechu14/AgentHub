@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { AdminAgentsTable } from "@/features/admin/AdminAgentsTable";
+import { EmbedConfigDocs } from "@/features/admin/EmbedConfigDocs";
 import { useAgents } from "@/hooks/useAgents";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -65,9 +66,7 @@ export default function AdminPortalPage() {
             </div>
           )}
           {activeTab === "embed-config" && (
-            <div className="text-center py-12">
-              <p className="text-slate-500 text-sm">Embed Configuration coming soon...</p>
-            </div>
+            <EmbedConfigDocs />
           )}
         </div>
       </div>
