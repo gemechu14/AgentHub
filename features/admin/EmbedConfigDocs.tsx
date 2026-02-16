@@ -379,7 +379,15 @@ export function EmbedConfigDocs() {
         client_secret: clientSecret,
         agent_id: selectedAgentId,
       });
-      setEmbedUrl(response.frontend_url);
+      // Convert chatbot URL to widget URL format
+      const url = new URL(response.frontend_url);
+      const token = url.hash.substring(1);
+      if (token) {
+        const widgetUrl = `${url.origin}/embed/widget?token=${token}`;
+        setEmbedUrl(widgetUrl);
+      } else {
+        setEmbedUrl(response.frontend_url);
+      }
     } catch (err) {
       console.error("Failed to generate embed URL:", err);
       setError(err instanceof Error ? err.message : "Failed to generate embed URL. Make sure you have the client secret.");
@@ -584,7 +592,10 @@ export function EmbedConfigDocs() {
             <CodeBlock code={embedUrl} label="Embed URL" />
             <div className="flex items-center gap-2">
               <button
-                onClick={() => window.open(embedUrl, '_blank')}
+                onClick={() => {
+                  // The embedUrl is already in widget format, just open it
+                  window.open(embedUrl, '_blank');
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Link2 className="w-4 h-4" />
