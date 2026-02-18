@@ -723,6 +723,9 @@ export function EmbedConfigDocs() {
       } else {
         setEmbedUrl(response.frontend_url);
       }
+      
+      // Reload credential to get updated embed_url/embed_token from backend
+      await loadCredential();
     } catch (err: any) {
       console.error("Failed to generate embed URL:", err);
       // Handle 403 errors specifically
@@ -755,6 +758,9 @@ export function EmbedConfigDocs() {
       } else {
         setEmbedUrl(response.frontend_url);
       }
+      
+      // Reload credential to get updated embed_url/embed_token from backend
+      await loadCredential();
     } catch (err: any) {
       console.error("Failed to regenerate embed URL:", err);
       // Handle 403 errors specifically
