@@ -11,7 +11,7 @@
  *     data-position="bottom-right"
  *   ></script>
  *
- * Supported positions: "bottom-right", "bottom-left", "top-right", "top-left"
+ * Supported positions: "bottom-right", "bottom-left", "top-right", "top-left", "center"
  */
 (function () {
   "use strict";
@@ -76,21 +76,30 @@
       bottom: "auto",
       right: "auto",
     },
+    "center": {
+      top: "50%",
+      left: "50%",
+      bottom: "auto",
+      right: "auto",
+      transform: "translate(-50%, -50%)",
+    },
   };
   var pos = positionStyles[position] || positionStyles["bottom-right"];
 
   // Create the container
   var container = document.createElement("div");
   container.id = "agenthub-chatbot-container";
+  var transformStyle = pos.transform ? pos.transform : "";
   container.style.cssText =
     "position:fixed;z-index:2147483647;" +
     (pos.bottom ? "bottom:" + pos.bottom + ";" : "") +
     (pos.right ? "right:" + pos.right + ";" : "") +
     (pos.left ? "left:" + pos.left + ";" : "") +
     (pos.top ? "top:" + pos.top + ";" : "") +
+    (transformStyle ? "transform:" + transformStyle + ";" : "") +
     "width:" + BUTTON_SIZE + "px;" +
     "height:" + BUTTON_SIZE + "px;" +
-    "transition:width 0.3s ease,height 0.3s ease,border-radius 0.3s ease,box-shadow 0.3s ease;" +
+    "transition:width 0.3s ease,height 0.3s ease,border-radius 0.3s ease,box-shadow 0.3s ease,transform 0.3s ease;" +
     "border-radius:50%;" +
     "overflow:hidden;" +
     "box-shadow:0 4px 12px rgba(0,0,0,0.15);";
@@ -125,12 +134,20 @@
       container.style.height = CHAT_HEIGHT + "px";
       container.style.borderRadius = "16px";
       container.style.boxShadow = "0 8px 32px rgba(0,0,0,0.2)";
+      // Maintain transform for center position
+      if (position === "center") {
+        container.style.transform = "translate(-50%, -50%)";
+      }
     } else if (event.data.type === "chatbot-close") {
       isOpen = false;
       container.style.width = BUTTON_SIZE + "px";
       container.style.height = BUTTON_SIZE + "px";
       container.style.borderRadius = "50%";
       container.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+      // Maintain transform for center position
+      if (position === "center") {
+        container.style.transform = "translate(-50%, -50%)";
+      }
     }
   });
 })();
