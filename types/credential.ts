@@ -7,6 +7,8 @@ export interface Credential {
   is_active: boolean;
   created_at: string;
   name?: string;
+  embed_url?: string; // Current embed URL if available
+  embed_token?: string; // Current embed token if available
 }
 
 export interface CreateCredentialRequest {

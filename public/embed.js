@@ -10,6 +10,8 @@
  *     data-token="YOUR_TOKEN_HERE"
  *     data-position="bottom-right"
  *   ></script>
+ *
+ * Supported positions: "bottom-right", "bottom-left", "top-right", "top-left"
  */
 (function () {
   "use strict";
@@ -62,6 +64,18 @@
       top: "auto",
       right: "auto",
     },
+    "top-right": {
+      top: MARGIN + "px",
+      right: MARGIN + "px",
+      bottom: "auto",
+      left: "auto",
+    },
+    "top-left": {
+      top: MARGIN + "px",
+      left: MARGIN + "px",
+      bottom: "auto",
+      right: "auto",
+    },
   };
   var pos = positionStyles[position] || positionStyles["bottom-right"];
 
@@ -70,10 +84,10 @@
   container.id = "agenthub-chatbot-container";
   container.style.cssText =
     "position:fixed;z-index:2147483647;" +
-    "bottom:" + pos.bottom + ";" +
-    "right:" + (pos.right || "auto") + ";" +
-    "left:" + (pos.left || "auto") + ";" +
-    "top:" + (pos.top || "auto") + ";" +
+    (pos.bottom ? "bottom:" + pos.bottom + ";" : "") +
+    (pos.right ? "right:" + pos.right + ";" : "") +
+    (pos.left ? "left:" + pos.left + ";" : "") +
+    (pos.top ? "top:" + pos.top + ";" : "") +
     "width:" + BUTTON_SIZE + "px;" +
     "height:" + BUTTON_SIZE + "px;" +
     "transition:width 0.3s ease,height 0.3s ease,border-radius 0.3s ease,box-shadow 0.3s ease;" +

@@ -80,9 +80,15 @@ export default function EmbedWidgetPage() {
       setAgentId(data.agent_id);
       setAgentName(data.agent_name || "Chatbot");
       setIsValidating(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to validate token:", err);
-      setError(err instanceof Error ? err.message : "Invalid token");
+      // Handle 403 errors specifically
+      if (err?.response?.status === 403 || err?.status === 403) {
+        const errorMessage = err?.response?.data?.detail || err?.message || "Embed is currently disabled for this agent. Please enable it to use embed.";
+        setError(errorMessage);
+      } else {
+        setError(err instanceof Error ? err.message : "Invalid token");
+      }
       setIsValidating(false);
     }
   };

@@ -2,7 +2,8 @@ import { api } from "./apiClient";
 import type { Credential, CreateCredentialRequest, CreateCredentialResponse } from "@/types/credential";
 
 /**
- * Create client credentials for an agent
+ * Create or update client credentials for an agent (upserts - if exists, updates; if not, creates)
+ * Ensures only one credential per agent
  * POST /agents/{account_id}/{agent_id}/credentials
  */
 export async function createCredential(
@@ -49,6 +50,22 @@ export async function regenerateCredentialSecret(
 ): Promise<CreateCredentialResponse> {
   return api.patch<CreateCredentialResponse>(
     `/agents/${accountId}/${agentId}/credentials/${credentialId}/regenerate-secret`
+  );
+}
+
+/**
+ * Toggle embed status for a credential
+ * PATCH /agents/{account_id}/{agent_id}/credentials/{credential_id}/toggle
+ */
+export async function toggleEmbedStatus(
+  accountId: string,
+  agentId: string,
+  credentialId: string,
+  isActive: boolean
+): Promise<Credential> {
+  return api.patch<Credential>(
+    `/agents/${accountId}/${agentId}/credentials/${credentialId}/toggle`,
+    { is_active: isActive }
   );
 }
 
