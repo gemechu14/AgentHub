@@ -12,6 +12,7 @@ import {
   mapConnectionTypeFromAPI, 
   mapModelTypeToAPI, 
   mapModelTypeFromAPI,
+  mapDatabaseTypeToAPI,
   mapDatabaseTypeFromAPI,
   buildPowerBIConfig, 
   buildDBConfig 
@@ -64,7 +65,14 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
   const [clientSecret, setClientSecret] = useState("");
   // DB fields
   const [databaseType, setDatabaseType] = useState("PostgreSQL");
-  const [connectionString, setConnectionString] = useState("");
+  const [dbHost, setDbHost] = useState("");
+  const [dbPort, setDbPort] = useState(5432);
+  const [dbDatabase, setDbDatabase] = useState("");
+  const [dbUsername, setDbUsername] = useState("");
+  const [dbPassword, setDbPassword] = useState("");
+
+  // Store original DB config values to detect changes
+  const [originalDBConfig, setOriginalDBConfig] = useState<DBConnectionConfig | null>(null);
 
   // Initialize form fields from agent connection_config
   useEffect(() => {
@@ -79,10 +87,13 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
       } else if (agent.connection_type === "DB") {
         const config = agent.connection_config as DBConnectionConfig;
         setDatabaseType(mapDatabaseTypeFromAPI(config.database_type));
-        // Reconstruct connection string from config
-        setConnectionString(
-          `${config.database_type}://${config.username}:${config.password}@${config.host}:${config.port}/${config.database}`
-        );
+        setDbHost(config.host || "");
+        setDbPort(config.port || 5432);
+        setDbDatabase(config.database || "");
+        setDbUsername(config.username || "");
+        setDbPassword(""); // Don't show existing password for security
+        // Store original config for comparison
+        setOriginalDBConfig(config);
       }
     }
   }, [agent]);
@@ -110,7 +121,7 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
 
   const connectionTypes = ["None", "Power BI Semantic Model", "SQL Database"];
 
-  const databaseTypes = ["PostgreSQL", "MySQL", "SQL Server", "Oracle"];
+  const databaseTypes = ["PostgreSQL", "MySQL", "MariaDB", "SQLite", "SQL Server", "Oracle"];
 
   const handleTest = async () => {
     setError(null);
@@ -184,29 +195,71 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
     }
 
     // Build connection config based on connection type
+    // Only include connection_config if the user is actually changing connection settings
     let connectionConfig = undefined;
     const apiConnectionType = mapConnectionTypeToAPI(connectionType);
+    const originalConnectionType = agent.connection_type;
+    const isChangingConnectionType = apiConnectionType !== originalConnectionType;
+
+    // Check if user has actually modified DB fields (compare to original values)
+    const hasModifiedDBFields = originalDBConfig ? (
+      dbHost !== originalDBConfig.host ||
+      dbPort !== originalDBConfig.port ||
+      dbDatabase !== originalDBConfig.database ||
+      dbUsername !== originalDBConfig.username ||
+      mapDatabaseTypeToAPI(databaseType) !== originalDBConfig.database_type ||
+      dbPassword !== "" // If password is entered, user wants to update it
+    ) : (dbHost || dbDatabase || dbUsername || dbPassword); // If no original config, any field means modification
+
+    const hasModifiedPowerBIFields = workspaceId || datasetId || tenantId || clientId || clientSecret;
 
     if (apiConnectionType === "POWERBI") {
-      if (!workspaceId || !datasetId) {
-        setError("Workspace ID and Dataset ID are required for Power BI connections");
-        return;
+      // Only validate if changing to PowerBI or modifying PowerBI fields
+      if (isChangingConnectionType || hasModifiedPowerBIFields) {
+        if (!workspaceId || !datasetId) {
+          setError("Workspace ID and Dataset ID are required for Power BI connections");
+          return;
+        }
+        connectionConfig = buildPowerBIConfig(workspaceId, datasetId, tenantId, clientId, clientSecret);
+        if (!connectionConfig) {
+          setError("Invalid Power BI configuration");
+          return;
+        }
       }
-      connectionConfig = buildPowerBIConfig(workspaceId, datasetId, tenantId, clientId, clientSecret);
-      if (!connectionConfig) {
-        setError("Invalid Power BI configuration");
-        return;
-      }
+      // If not changing connection type and not modifying fields, don't include connection_config
     } else if (apiConnectionType === "DB") {
-      if (!connectionString) {
-        setError("Connection string is required for database connections");
-        return;
+      // Only validate and include connection_config if:
+      // 1. Changing connection type to DB, OR
+      // 2. Actually modifying DB fields (excluding password check)
+      const hasModifiedDBFieldsExceptPassword = originalDBConfig ? (
+      dbHost !== originalDBConfig.host ||
+      dbPort !== originalDBConfig.port ||
+      dbDatabase !== originalDBConfig.database ||
+      dbUsername !== originalDBConfig.username ||
+      mapDatabaseTypeToAPI(databaseType) !== originalDBConfig.database_type
+      ) : (dbHost || dbDatabase || dbUsername); // If no original config, any field means modification
+      
+      if (isChangingConnectionType || hasModifiedDBFieldsExceptPassword || dbPassword) {
+        // User is changing connection type, modifying DB fields, or updating password
+        // Require all fields including password
+        if (!dbHost || !dbDatabase || !dbUsername || !dbPassword || !databaseType) {
+          setError("All database connection fields are required (host, database, username, password)");
+          return;
+        }
+        connectionConfig = buildDBConfig(dbHost, dbPort, dbDatabase, dbUsername, dbPassword, databaseType);
+        if (!connectionConfig) {
+          setError("Invalid database configuration");
+          return;
+        }
       }
-      connectionConfig = buildDBConfig(connectionString, databaseType);
-      if (!connectionConfig) {
-        setError("Invalid connection string format. Expected: postgresql://user:password@host:port/database");
-        return;
+      // If not changing connection type and not modifying any DB fields, don't include connection_config
+      // This allows updating name/description without requiring password
+    } else {
+      // Connection type is "None" - only clear connection_config if changing from DB/POWERBI
+      if (isChangingConnectionType) {
+        connectionConfig = undefined; // Clear connection config
       }
+      // If not changing, don't include connection_config
     }
 
     // Build request payload
@@ -740,20 +793,85 @@ export function EditAgentForm({ agent }: EditAgentFormProps) {
                     </select>
                   </div>
 
-                  {/* Connection String */}
+                  {/* Host */}
                   <div>
                     <label className="block text-sm font-medium text-slate-900 mb-2">
-                      Connection String <span className="text-red-500">*</span>
+                      Host <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={connectionString}
-                      onChange={(e) => setConnectionString(e.target.value)}
-                      placeholder="postgresql://user:password@host:port/database"
+                      value={dbHost}
+                      onChange={(e) => setDbHost(e.target.value)}
+                      placeholder="localhost"
                       className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <p className="mt-2 text-xs text-slate-500">
-                      Format: postgresql://username:password@host:port/database
+                      Database server hostname or IP address. For SQLite, use the file path.
+                    </p>
+                  </div>
+
+                  {/* Port */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Port <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={dbPort}
+                      onChange={(e) => setDbPort(parseInt(e.target.value) || 5432)}
+                      placeholder="5432"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Database server port (e.g., 5432 for PostgreSQL, 3306 for MySQL). Not used for SQLite.
+                    </p>
+                  </div>
+
+                  {/* Database */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Database Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={dbDatabase}
+                      onChange={(e) => setDbDatabase(e.target.value)}
+                      placeholder="mydatabase"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Name of the database to connect to.
+                    </p>
+                  </div>
+
+                  {/* Username */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Username <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={dbUsername}
+                      onChange={(e) => setDbUsername(e.target.value)}
+                      placeholder="myuser"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Password <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={dbPassword}
+                      onChange={(e) => setDbPassword(e.target.value)}
+                      placeholder="Enter database password"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Enter the database password. For security, existing passwords are not displayed.
                     </p>
                   </div>
                 </div>

@@ -70,10 +70,8 @@ function ChatContent() {
     }
   };
 
-  // Filter agents to only show those with POWERBI connection (chat support)
-  const chatAgents = agents?.filter(
-    (agent) => agent.connection_type === "POWERBI"
-  ) || [];
+  // Use all agents (no filtering)
+  const chatAgents = agents || [];
 
   return (
     <div className="flex flex-1 flex-col h-full">

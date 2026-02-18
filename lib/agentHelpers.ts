@@ -67,7 +67,9 @@ export function mapDatabaseTypeToAPI(uiType: string): DatabaseType {
   const typeMap: Record<string, DatabaseType> = {
     "PostgreSQL": "postgresql",
     "MySQL": "mysql",
-    "SQL Server": "sqlserver",
+    "MariaDB": "mariadb",
+    "SQLite": "sqlite",
+    "SQL Server": "mssql",
     "Oracle": "oracle",
   };
   return typeMap[uiType] || "postgresql";
@@ -77,10 +79,14 @@ export function mapDatabaseTypeToAPI(uiType: string): DatabaseType {
  * Convert API DatabaseType to UI string
  */
 export function mapDatabaseTypeFromAPI(apiType: DatabaseType): string {
-  const typeMap: Record<DatabaseType, string> = {
+  const typeMap: Record<string, string> = {
     postgresql: "PostgreSQL",
+    postgres: "PostgreSQL",
     mysql: "MySQL",
-    sqlserver: "SQL Server",
+    mariadb: "MariaDB",
+    sqlite: "SQLite",
+    mssql: "SQL Server",
+    sqlserver: "SQL Server", // Legacy support
     oracle: "Oracle",
   };
   return typeMap[apiType] || "PostgreSQL";
@@ -137,23 +143,26 @@ export function buildPowerBIConfig(
 }
 
 /**
- * Build DB connection config from form data
+ * Build DB connection config from individual form fields
  */
 export function buildDBConfig(
-  connectionString: string,
+  host: string,
+  port: number,
+  database: string,
+  username: string,
+  password: string,
   databaseType: string
 ): DBConnectionConfig | null {
-  const parsed = parseConnectionString(connectionString);
-  if (!parsed) {
+  if (!host || !database || !username || !password || !databaseType) {
     return null;
   }
 
   return {
-    host: parsed.host,
-    username: parsed.username,
-    password: parsed.password,
-    database: parsed.database,
-    port: parsed.port,
+    host: host.trim(),
+    port: port || 5432,
+    database: database.trim(),
+    username: username.trim(),
+    password: password.trim(),
     database_type: mapDatabaseTypeToAPI(databaseType),
   };
 }

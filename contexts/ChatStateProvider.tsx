@@ -24,9 +24,9 @@ export function ChatStateProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { data: agents } = useAgents();
 
-  // Filter chat-compatible agents
+  // Use all agents (no filtering)
   const chatAgents = useMemo(
-    () => agents?.filter((agent) => agent.connection_type === "POWERBI") || [],
+    () => agents || [],
     [agents]
   );
 

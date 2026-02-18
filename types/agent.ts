@@ -2,7 +2,7 @@ export type AgentStatus = "active" | "draft" | "inactive";
 
 export type ConnectionType = "POWERBI" | "DB" | "NONE";
 
-export type DatabaseType = "postgresql" | "mysql" | "sqlserver" | "oracle";
+export type DatabaseType = "postgresql" | "postgres" | "mysql" | "mariadb" | "sqlite" | "mssql" | "oracle";
 
 export interface PowerBIConnectionConfig {
   tenant_id: string;

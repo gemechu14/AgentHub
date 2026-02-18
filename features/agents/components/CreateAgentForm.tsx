@@ -49,7 +49,11 @@ export function CreateAgentForm() {
   const [clientSecret, setClientSecret] = useState("");
   // DB fields
   const [databaseType, setDatabaseType] = useState("PostgreSQL");
-  const [connectionString, setConnectionString] = useState("");
+  const [dbHost, setDbHost] = useState("");
+  const [dbPort, setDbPort] = useState(5432);
+  const [dbDatabase, setDbDatabase] = useState("");
+  const [dbUsername, setDbUsername] = useState("");
+  const [dbPassword, setDbPassword] = useState("");
 
   const tabs = [
     { id: "basics", label: "Basics" },
@@ -73,7 +77,7 @@ export function CreateAgentForm() {
 
   const connectionTypes = ["None", "Power BI Semantic Model", "SQL Database"];
 
-  const databaseTypes = ["PostgreSQL", "MySQL", "SQL Server", "Oracle"];
+  const databaseTypes = ["PostgreSQL", "MySQL", "MariaDB", "SQLite", "SQL Server", "Oracle"];
 
   const handleTest = async () => {
     setError(null);
@@ -161,13 +165,13 @@ export function CreateAgentForm() {
         return;
       }
     } else if (apiConnectionType === "DB") {
-      if (!connectionString) {
-        setError("Connection string is required for database connections");
+      if (!dbHost || !dbDatabase || !dbUsername || !dbPassword || !databaseType) {
+        setError("All database connection fields are required (host, database, username, password)");
         return;
       }
-      connectionConfig = buildDBConfig(connectionString, databaseType);
+      connectionConfig = buildDBConfig(dbHost, dbPort, dbDatabase, dbUsername, dbPassword, databaseType);
       if (!connectionConfig) {
-        setError("Invalid connection string format. Expected: postgresql://user:password@host:port/database");
+        setError("Invalid database configuration");
         return;
       }
     }
@@ -720,21 +724,83 @@ export function CreateAgentForm() {
                     </select>
                   </div>
 
-                  {/* Connection String */}
+                  {/* Host */}
                   <div>
                     <label className="block text-sm font-medium text-slate-900 mb-2">
-                      Connection String <span className="text-red-500">*</span>
+                      Host <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={connectionString}
-                      onChange={(e) => setConnectionString(e.target.value)}
-                      placeholder="postgresql://user:password@host:port/database"
+                      value={dbHost}
+                      onChange={(e) => setDbHost(e.target.value)}
+                      placeholder="localhost"
                       className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                     <p className="mt-2 text-xs text-slate-500">
-                      Format: postgresql://username:password@host:port/database
+                      Database server hostname or IP address. For SQLite, use the file path.
                     </p>
+                  </div>
+
+                  {/* Port */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Port <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={dbPort}
+                      onChange={(e) => setDbPort(parseInt(e.target.value) || 5432)}
+                      placeholder="5432"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Database server port (e.g., 5432 for PostgreSQL, 3306 for MySQL). Not used for SQLite.
+                    </p>
+                  </div>
+
+                  {/* Database */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Database Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={dbDatabase}
+                      onChange={(e) => setDbDatabase(e.target.value)}
+                      placeholder="mydatabase"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Name of the database to connect to.
+                    </p>
+                  </div>
+
+                  {/* Username */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Username <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={dbUsername}
+                      onChange={(e) => setDbUsername(e.target.value)}
+                      placeholder="myuser"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Password <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      value={dbPassword}
+                      onChange={(e) => setDbPassword(e.target.value)}
+                      placeholder="Enter database password"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
                   </div>
                 </div>
               )}
