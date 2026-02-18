@@ -21,6 +21,9 @@ const publicRoutes = [
   "/oauth/google/callback",
   "/oauth/google/callbacall", // Handle backend typo
   "/debug-auth", // Debug page
+  "/embed", // Embed widget routes (public, no auth required)
+  "/embed/widget", // Explicitly allow embed widget
+  "/embed/chatbot", // Explicitly allow embed chatbot
 ];
 
 interface AuthGuardProps {
@@ -44,6 +47,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (route === "/signup") {
       // Always allow signup route (even with query params)
       return pathname === "/signup" || pathname.startsWith("/signup");
+    }
+    // For embed routes, allow any path that starts with /embed
+    if (route.startsWith("/embed")) {
+      return pathname.startsWith("/embed");
     }
     return pathname.startsWith(route);
   });

@@ -20,8 +20,9 @@ export async function launchEmbed(data: LaunchEmbedRequest): Promise<LaunchEmbed
 
 export interface ValidateTokenResponse {
   agent_id: string;
-  credential_id: string;
+  agent_name: string;
   account_id: string;
+  credential_id: string;
 }
 
 /**

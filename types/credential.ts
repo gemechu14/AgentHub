@@ -18,3 +18,7 @@ export interface CreateCredentialResponse extends Credential {
   client_secret: string; // Always present in creation response
 }
 
+
+
+
+

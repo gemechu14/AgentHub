@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website with Chatbot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+        .hero {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2.5rem; margin-bottom: 16px; }
+        .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+        .content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card h2 { margin-bottom: 12px; color: #1e3a5f; }
+        .card p { color: #555; line-height: 1.6; }
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .highlight { color: #89b4fa; }
+        .string { color: #a6e3a1; }
+        .comment { color: #6c7086; }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>Welcome to My Website</h1>
+        <p>This is an example of embedding the AgentHub chatbot widget. Look at the bottom-right corner — there's a chat icon!</p>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h2>How to Embed the Chatbot</h2>
+            <p>Just add a single script tag before your closing <code>&lt;/body&gt;</code> tag:</p>
+            <div class="code-block">
+<span class="comment">&lt;!-- Add this before &lt;/body&gt; --&gt;</span>
+&lt;<span class="highlight">script</span>
+    <span class="highlight">src</span>=<span class="string">"http://localhost:3000/embed.js"</span>
+    <span class="highlight">data-token</span>=<span class="string">"YOUR_TOKEN_HERE"</span>
+&gt;&lt;/<span class="highlight">script</span>&gt;
+            </div>
+            <p style="margin-top: 12px; color: #888; font-size: 14px;">
+                That's it! The script automatically creates a floating circular chat button in the bottom-right corner. When clicked, it expands into a full chat popup.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>How It Works</h2>
+            <p>1. The embed script creates a small <strong>60×60px circular button</strong> fixed to the bottom-right corner of your page.</p>
+            <p style="margin-top: 8px;">2. When a user clicks the circle, the script expands the container to <strong>400×600px</strong> and shows the chat interface.</p>
+            <p style="margin-top: 8px;">3. When the user clicks the ✕ button, the chat closes back to the small circle.</p>
+            <p style="margin-top: 8px;">4. No rectangular iframe borders — just a clean floating widget!</p>
+        </div>
+
+        <div class="card">
+            <h2>Optional: Custom Position</h2>
+            <p>You can position the widget on the bottom-left instead:</p>
+            <div class="code-block">
+&lt;<span class="highlight">script</span>
+    <span class="highlight">src</span>=<span class="string">"http://localhost:3000/embed.js"</span>
+    <span class="highlight">data-token</span>=<span class="string">"YOUR_TOKEN_HERE"</span>
+    <span class="highlight">data-position</span>=<span class="string">"bottom-left"</span>
+&gt;&lt;/<span class="highlight">script</span>&gt;
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Getting Your Token</h2>
+            <p>1. Go to <strong>Admin Portal → Embed Configuration</strong></p>
+            <p>2. Select an agent</p>
+            <p>3. Click <strong>"Generate Embed URL"</strong> on a credential</p>
+            <p>4. Copy the embed code snippet</p>
+            <p>5. Paste it into your website's HTML</p>
+        </div>
+    </div>
+
+    <!-- 
+        =============================================
+        EMBED THE CHATBOT - Replace YOUR_TOKEN_HERE
+        =============================================
+        Just add this one line and you'll get a circular
+        chat button in the bottom-right corner!
+    -->
+    <script src="http://localhost:3000/embed.js" data-token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJsb2NpbWFwcGVyLWFwaSIsImFnZW50X2lkIjoiMDRhMDA3NTAtY2I1YS00NTk1LTllNTktNTE4YmQ5YTA0MDY1IiwiY3JlZF9pZCI6ImVjNjk0OTA2LWQ1MzYtNDY5ZS1hOGQ1LTliNjY0NTlkMmQ3OSIsImFpZCI6ImJhZmMwY2M5LTQ1NjEtNDhlMS1iOTAxLThlYzgwMjViYzI4MSIsImlhdCI6MTc3MTI3NTQ3OSwiZXhwIjoxNzcxMjgyNjc5fQ.1Jip9c6aoKHQWemFkYqrJyd8Jtb-XzTjQOi3c12uUsg"></script>
+
+</body>
+</html>

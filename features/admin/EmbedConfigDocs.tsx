@@ -571,10 +571,10 @@ export function EmbedConfigDocs() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-green-900">
-                  Embed URL Generated Successfully!
+                  Embed Code Generated Successfully!
                 </h3>
                 <p className="text-xs text-green-700 mt-0.5">
-                  Copy this URL and paste it in a new tab to test the chatbot.
+                  Add this script tag to your website to embed the chatbot as a floating circle icon.
                 </p>
               </div>
             </div>
@@ -589,17 +589,30 @@ export function EmbedConfigDocs() {
             </button>
           </div>
           <div className="space-y-3">
-            <CodeBlock code={embedUrl} label="Embed URL" />
+            {/* Embed Script Snippet */}
+            {(() => {
+              const urlObj = new URL(embedUrl);
+              const tokenValue = urlObj.searchParams.get("token") || "";
+              const embedScript = `<script src="${urlObj.origin}/embed.js" data-token="${tokenValue}"></script>`;
+              return (
+                <CodeBlock
+                  code={embedScript}
+                  label="Embed Code (add before closing </body> tag)"
+                  copyValue={embedScript}
+                />
+              );
+            })()}
+            {/* Also show direct URL */}
+            <CodeBlock code={embedUrl} label="Direct Widget URL (for testing)" />
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  // The embedUrl is already in widget format, just open it
                   window.open(embedUrl, '_blank');
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-sm hover:shadow-md transition-all duration-200"
               >
                 <Link2 className="w-4 h-4" />
-                <span>Open in New Tab</span>
+                <span>Test in New Tab</span>
               </button>
             </div>
           </div>
