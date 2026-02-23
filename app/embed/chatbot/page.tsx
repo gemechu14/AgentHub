@@ -378,7 +378,7 @@ export default function EmbedChatbotPage() {
             }}
           />
           <button
-            onClick={handleSendMessage}
+            onClick={() => handleSendMessage()}
             disabled={!inputMessage.trim() || isLoading || !agentId}
             className="mb-2 mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed"
             title="Send message"
