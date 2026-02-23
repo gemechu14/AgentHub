@@ -6,9 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ProfileTab } from "./ProfileTab";
 import { MembersTab } from "./MembersTab";
 import { InvitationsTab } from "./InvitationsTab";
-import { ThemeTab } from "./ThemeTab";
+// import { ThemeTab } from "./ThemeTab";
 
-type TabType = "profile" | "members" | "invitations" | "theme";
+type TabType = "profile" | "members" | "invitations"; // | "theme";
 
 export function SettingsTabs() {
   const { user } = useAuth();
@@ -31,7 +31,7 @@ export function SettingsTabs() {
       { id: "profile" as const, label: "Profile", icon: User },
       { id: "members" as const, label: "Members", icon: Users },
       { id: "invitations" as const, label: "Invitations", icon: Mail },
-      { id: "theme" as const, label: "Theme", icon: Palette },
+      // { id: "theme" as const, label: "Theme", icon: Palette },
     ];
 
     // If user is MEMBER, only show Profile tab
@@ -78,7 +78,7 @@ export function SettingsTabs() {
         {activeTab === "profile" && <ProfileTab />}
         {activeTab === "members" && !isMember && <MembersTab />}
         {activeTab === "invitations" && !isMember && <InvitationsTab />}
-        {activeTab === "theme" && !isMember && <ThemeTab />}
+        {/* {activeTab === "theme" && !isMember && <ThemeTab />} */}
       </div>
     </div>
   );

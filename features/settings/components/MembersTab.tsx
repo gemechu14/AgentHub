@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { teamService } from "@/services/teamService";
 import { TeamMember } from "@/types/team";
 import { X, Check, AlertCircle } from "lucide-react";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import { KebabMenu } from "@/components/ui/KebabMenu";
+import { useAgents } from "@/hooks/useAgents";
 
 export function MembersTab() {
   const { user } = useAuth();
   const { toasts, showToast, removeToast } = useToast();
+  const { data: agents } = useAgents();
 
   // State
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -195,6 +197,23 @@ export function MembersTab() {
     return role.charAt(0) + role.slice(1).toLowerCase();
   };
 
+  // Get agent names for a member
+  const getAssignedAgents = (member: TeamMember): string[] => {
+    if (!member.agent_access || member.agent_access.length === 0) {
+      return [];
+    }
+    if (!agents || agents.length === 0) {
+      // If agents haven't loaded yet, return the IDs as fallback
+      return member.agent_access;
+    }
+    return member.agent_access
+      .map((agentId) => {
+        const agent = agents.find((a) => a.id === agentId);
+        return agent?.name || agentId;
+      })
+      .filter(Boolean);
+  };
+
   return (
     <>
       <ToastContainer toasts={toasts} onClose={removeToast} />
@@ -231,6 +250,9 @@ export function MembersTab() {
                         </th>
                         <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                           Role
+                        </th>
+                        <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+                          Assigned Agents
                         </th>
                         <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                           Status
@@ -285,6 +307,35 @@ export function MembersTab() {
                                 {formatRole(member.role)}
                               </span>
                             )}
+                          </td>
+                          <td className="px-6 py-4">
+                            {(() => {
+                              const assignedAgents = getAssignedAgents(member);
+                              const isMember = member.role?.toUpperCase() === "MEMBER";
+                              
+                              if (isMember && assignedAgents.length > 0) {
+                                return (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {assignedAgents.map((agentName, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                                      >
+                                        {agentName}
+                                      </span>
+                                    ))}
+                                  </div>
+                                );
+                              } else if (isMember) {
+                                return (
+                                  <span className="text-xs text-slate-400 italic">No agents assigned</span>
+                                );
+                              } else {
+                                return (
+                                  <span className="text-xs text-slate-400">—</span>
+                                );
+                              }
+                            })()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span

@@ -4,15 +4,19 @@ export interface TeamMember {
   id?: string;
   email: string;
   role: string;
-  status: "active" | "pending";
+  status: "active" | "pending" | "expired";
   user_id?: string;
+  agent_access?: string[]; // Agent IDs assigned to this member
+  schema_access?: string[]; // Schema access (if applicable)
 }
 
 export interface TeamMemberResponse {
   email: string;
   role: string;
-  status: "active" | "pending";
+  status: "active" | "pending" | "expired";
   user_id?: string | null;
+  agent_access?: string[]; // Agent IDs assigned to this member
+  schema_access?: string[]; // Schema access (if applicable)
 }
 
 export interface InviteMemberRequest {

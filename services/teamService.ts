@@ -84,6 +84,8 @@ class TeamService {
       role: member.role,
       status: member.status,
       user_id: member.user_id || undefined,
+      agent_access: member.agent_access || undefined,
+      schema_access: member.schema_access || undefined,
     }));
   }
 
