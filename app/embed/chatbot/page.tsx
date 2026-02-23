@@ -54,6 +54,14 @@ export default function EmbedChatbotPage() {
     try {
       setIsValidating(true);
       const data = await validateEmbedToken(tokenValue);
+      
+      // Check if agent is active
+      if (data.status !== "active") {
+        setError("This agent is not active. The token may be expired or invalid.");
+        setIsValidating(false);
+        return;
+      }
+      
       setAgentId(data.agent_id);
       setAgentName(data.agent_name || "Chatbot");
       setRecommendedQuestions(data.recommended_questions || []);
