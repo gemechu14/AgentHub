@@ -37,12 +37,24 @@ function renderMarkdown(text: string): ReactNode[] {
         elements.push(<br key={`br-${blockIdx}-${lineIdx}`} />);
       }
 
+      const lineKey = `${blockIdx}-${lineIdx}`;
+
+      // Check if line starts with "### " and make the text after it bold
+      if (line.startsWith("### ")) {
+        const textAfterHash = line.slice(4); // Remove "### "
+        elements.push(
+          <strong key={`h3-${lineKey}`} className="font-semibold">
+            {textAfterHash}
+          </strong>
+        );
+        return;
+      }
+
       // Parse inline formatting: **bold**, *italic*, `code`
       // Regex matches: **bold**, *italic*, `code`, or plain text
       const inlineRegex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+?)`)/g;
       let lastIndex = 0;
       let match;
-      const lineKey = `${blockIdx}-${lineIdx}`;
 
       while ((match = inlineRegex.exec(line)) !== null) {
         // Push plain text before this match

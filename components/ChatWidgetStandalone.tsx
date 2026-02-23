@@ -170,10 +170,20 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
                         backgroundColor: message.role === "user" ? '#2563eb' : '#f3f4f6',
                         color: message.role === "user" ? 'white' : '#1f2937',
                         wordWrap: 'break-word',
-                        overflowWrap: 'anywhere'
+                        overflowWrap: 'anywhere',
+                        whiteSpace: 'pre-wrap'
                       }}
                     >
-                      {message.content}
+                      {message.content.split("\n").map((line, idx, arr) => (
+                        <span key={idx}>
+                          {line.startsWith("###") ? (
+                            <strong style={{ fontWeight: '600' }}>{line}</strong>
+                          ) : (
+                            line
+                          )}
+                          {idx < arr.length - 1 && <br />}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Send, X, MessageCircle, Lightbulb, ChevronUp } from "lucide-react";
 import { validateEmbedToken } from "@/services/embedService";
 
@@ -9,6 +9,64 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   created_at: string;
+}
+
+// Helper function to parse markdown (### headings and **bold**)
+function parseMarkdown(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const lines = text.split("\n");
+  
+  lines.forEach((line, lineIdx) => {
+    if (lineIdx > 0) {
+      parts.push(<br key={`br-${lineIdx}`} />);
+    }
+    
+    // Handle ### headings
+    if (line.startsWith("### ")) {
+      parts.push(
+        <strong key={`h3-${lineIdx}`} className="font-semibold">
+          {line.slice(4)}
+        </strong>
+      );
+      return;
+    }
+    
+    // Handle **bold** syntax
+    const boldRegex = /\*\*(.+?)\*\*/g;
+    let lastIndex = 0;
+    let match;
+    const lineParts: React.ReactNode[] = [];
+    
+    while ((match = boldRegex.exec(line)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        lineParts.push(line.slice(lastIndex, match.index));
+      }
+      // Add bold text
+      lineParts.push(
+        <strong key={`bold-${lineIdx}-${match.index}`} className="font-semibold">
+          {match[1]}
+        </strong>
+      );
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (lastIndex < line.length) {
+      lineParts.push(line.slice(lastIndex));
+    }
+    
+    // If no bold found, just add the line as-is
+    if (lineParts.length === 0) {
+      parts.push(<span key={`line-${lineIdx}`}>{line}</span>);
+    } else {
+      parts.push(
+        <span key={`line-${lineIdx}`}>{lineParts}</span>
+      );
+    }
+  });
+  
+  return parts;
 }
 
 export default function EmbedWidgetPage() {
@@ -338,12 +396,12 @@ export default function EmbedWidgetPage() {
                       : "bg-slate-100 text-slate-900"
                   }`}
                 >
-                  <p
+                  <div
                     className="text-sm whitespace-pre-wrap break-words"
                     style={{ overflowWrap: "anywhere" }}
                   >
-                    {message.content}
-                  </p>
+                    {parseMarkdown(message.content)}
+                  </div>
                 </div>
               </div>
             ))}
