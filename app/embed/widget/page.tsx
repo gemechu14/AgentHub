@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Send, X, MessageCircle, Lightbulb, ChevronUp } from "lucide-react";
+import { Send, X, MessageCircle, Lightbulb, ChevronUp, Bot } from "lucide-react";
 import { validateEmbedToken } from "@/services/embedService";
 import { DEFAULT_THEME, type EmbedTheme } from "@/types/theme";
 
@@ -346,10 +346,10 @@ export default function EmbedWidgetPage() {
       >
         <div className="flex items-center gap-2">
           <div 
-            className="flex h-8 w-8 items-center justify-center rounded-full text-white text-sm font-semibold"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-white"
             style={{ backgroundColor: theme.accent }}
           >
-            {agentName.charAt(0).toUpperCase()}
+            <Bot className="w-5 h-5" />
           </div>
           <div>
             <h1 
