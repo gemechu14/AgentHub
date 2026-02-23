@@ -34,6 +34,12 @@ export function mapConnectionTypeFromAPI(apiType: ConnectionType): string {
  * Convert UI model name to API model_type
  */
 export function mapModelTypeToAPI(uiModel: string): string {
+  // Models are already in API format, just validate and return
+  const validModels = ["gpt-4", "gpt-4o", "gpt-4o-mini"];
+  if (validModels.includes(uiModel)) {
+    return uiModel;
+  }
+  // Legacy mapping for backwards compatibility
   const modelMap: Record<string, string> = {
     "OpenAI GPT-4": "gpt-4",
     "OpenAI GPT-3.5": "gpt-3.5-turbo",
@@ -48,16 +54,23 @@ export function mapModelTypeToAPI(uiModel: string): string {
  * Convert API model_type to UI model name
  */
 export function mapModelTypeFromAPI(apiModel: string | undefined): string {
-  if (!apiModel) return "OpenAI GPT-4";
+  if (!apiModel) return "gpt-4";
   
+  // Models are already in API format, return as-is
+  const validModels = ["gpt-4", "gpt-4o", "gpt-4o-mini"];
+  if (validModels.includes(apiModel)) {
+    return apiModel;
+  }
+  
+  // Legacy mapping for backwards compatibility
   const modelMap: Record<string, string> = {
-    "gpt-4": "OpenAI GPT-4",
-    "gpt-3.5-turbo": "OpenAI GPT-3.5",
-    "claude-3-opus": "Claude 3 Opus",
-    "claude-3-sonnet": "Claude 3 Sonnet",
-    "gemini-pro": "Google Gemini Pro",
+    "gpt-4": "gpt-4",
+    "gpt-3.5-turbo": "gpt-4", // Map old models to gpt-4
+    "claude-3-opus": "gpt-4",
+    "claude-3-sonnet": "gpt-4",
+    "gemini-pro": "gpt-4",
   };
-  return modelMap[apiModel] || "OpenAI GPT-4";
+  return modelMap[apiModel] || "gpt-4";
 }
 
 /**

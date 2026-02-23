@@ -12,6 +12,8 @@ export interface ConnectionCheckResponse {
   workspace_id?: string;
   dataset_id?: string;
   table_count?: number;
+  database_name?: string;
+  host?: string;
   error?: string;
 }
 
@@ -46,5 +48,15 @@ export interface ChatMessage {
   question: string;
   response: PowerBIChatResponse;
   timestamp: Date;
+}
+
+// Database test connection types
+export interface DBTestConnectionRequest {
+  host: string;
+  username: string;
+  database: string;
+  password: string;
+  port: number;
+  database_type: string;
 }
 

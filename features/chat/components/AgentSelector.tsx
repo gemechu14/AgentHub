@@ -51,30 +51,33 @@ export function AgentSelector({
 
       {isOpen && (
         <div className="absolute left-0 top-full z-50 mt-1 max-h-60 w-64 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-          {agents.length === 0 ? (
-            <div className="px-4 py-2 text-sm text-slate-500">
-              No agents available
-            </div>
-          ) : (
-            <div className="py-1">
-              {agents.map((agent) => (
-                <button
-                  key={agent.id}
-                  onClick={() => {
-                    onSelectAgent(agent);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm transition-colors ${
-                    selectedAgent?.id === agent.id
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-slate-900 hover:bg-slate-50"
-                  }`}
-                >
-                  {agent.name}
-                </button>
-              ))}
-            </div>
-          )}
+          {(() => {
+            const activeAgents = agents.filter((agent) => agent.status === "active");
+            return activeAgents.length === 0 ? (
+              <div className="px-4 py-2 text-sm text-slate-500">
+                No active agents available
+              </div>
+            ) : (
+              <div className="py-1">
+                {activeAgents.map((agent) => (
+                  <button
+                    key={agent.id}
+                    onClick={() => {
+                      onSelectAgent(agent);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                      selectedAgent?.id === agent.id
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    {agent.name}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

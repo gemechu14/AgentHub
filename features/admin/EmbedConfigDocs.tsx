@@ -274,6 +274,8 @@ export function EmbedConfigDocs() {
           <div className="text-sm text-slate-500">Loading agents...</div>
         ) : !agents || agents.length === 0 ? (
           <div className="text-sm text-slate-500">No agents available. Create an agent first.</div>
+        ) : agents.filter((agent) => agent.status === "active").length === 0 ? (
+          <div className="text-sm text-slate-500">No active agents available.</div>
         ) : (
           <>
             <select
@@ -287,11 +289,13 @@ export function EmbedConfigDocs() {
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">-- Select an agent --</option>
-              {agents.map((agent) => (
-                <option key={agent.id} value={agent.id}>
-                  {agent.name}
-                </option>
-              ))}
+              {agents
+                .filter((agent) => agent.status === "active")
+                .map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </option>
+                ))}
             </select>
             {selectedAgentId && (
               <div className="mt-2">
