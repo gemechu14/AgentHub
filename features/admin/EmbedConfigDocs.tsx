@@ -2,13 +2,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Copy, Check, AlertCircle, X, RefreshCw, Link2, AlertTriangle } from "lucide-react";
+import { Copy, Check, AlertCircle, X, RefreshCw, Link2, AlertTriangle, Palette, Save, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAccountId } from "@/services/agentsService";
 import { useAgents } from "@/hooks/useAgents";
 import { listCredentials, toggleEmbedStatus } from "@/services/credentialsService";
-import { launchEmbed } from "@/services/embedService";
+import { launchEmbed, updateCredentialTheme } from "@/services/embedService";
 import type { Credential } from "@/types/credential";
+import { DEFAULT_THEME, type EmbedTheme } from "@/types/theme";
 
 interface CodeBlockProps {
   code: string;
@@ -69,6 +70,11 @@ export function EmbedConfigDocs() {
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [isGeneratingEmbed, setIsGeneratingEmbed] = useState(false);
   const [showRegenerateWarning, setShowRegenerateWarning] = useState(false);
+  const [theme, setTheme] = useState<EmbedTheme>(DEFAULT_THEME);
+  const [isSavingTheme, setIsSavingTheme] = useState(false);
+  const [themeError, setThemeError] = useState<string | null>(null);
+  const [themeSuccess, setThemeSuccess] = useState(false);
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
 
   const accountId = user ? getAccountId(user) : null;
   const loadingRef = useRef(false);
@@ -95,6 +101,13 @@ export function EmbedConfigDocs() {
       // Get the first credential (should only be one per agent)
       const cred = data.length > 0 ? data[0] : null;
       setCredential(cred);
+      
+      // Set theme from credential or use default
+      if (cred?.theme) {
+        setTheme(cred.theme);
+      } else {
+        setTheme(DEFAULT_THEME);
+      }
       
       // If credential has embed_url or embed_token, use it
       if (cred) {
@@ -231,6 +244,31 @@ export function EmbedConfigDocs() {
     } finally {
       setIsToggling(false);
     }
+  };
+
+  const handleSaveTheme = async () => {
+    if (!selectedAgentId || !accountId || !credential) return;
+
+    setIsSavingTheme(true);
+    setThemeError(null);
+    setThemeSuccess(false);
+
+    try {
+      await updateCredentialTheme(accountId, selectedAgentId, credential.id, theme);
+      setThemeSuccess(true);
+      // Reload credential to get updated theme
+      await loadCredential();
+      setTimeout(() => setThemeSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to update theme:", err);
+      setThemeError(err instanceof Error ? err.message : "Failed to update theme");
+    } finally {
+      setIsSavingTheme(false);
+    }
+  };
+
+  const handleResetTheme = () => {
+    setTheme(DEFAULT_THEME);
   };
 
   const selectedAgent = agents?.find((a) => a.id === selectedAgentId);
@@ -401,19 +439,464 @@ export function EmbedConfigDocs() {
         </div>
       )} */}
 
+      {/* Theme Customization Section */}
+      {credential && (
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+          {/* Header - Toggle Button */}
+          <button
+            onClick={() => setIsThemeOpen(!isThemeOpen)}
+            className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg">
+                <Palette className="w-5 h-5 text-slate-700" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-slate-900">Theme Customization</h3>
+                <p className="text-sm text-slate-600">Customize the appearance of your embed widget</p>
+              </div>
+            </div>
+            {isThemeOpen ? (
+              <ChevronUp className="w-5 h-5 text-slate-500" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-slate-500" />
+            )}
+          </button>
+
+          {/* Collapsible Content */}
+          {isThemeOpen && (
+            <div className="px-6 pb-6 space-y-6 border-t border-slate-200">
+              {/* Theme Success Message */}
+              {themeSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600" />
+                  <p className="text-sm text-green-800">Theme updated successfully!</p>
+                </div>
+              )}
+
+              {/* Theme Error Message */}
+              {themeError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <p className="text-sm text-red-800">{themeError}</p>
+                  <button
+                    onClick={() => setThemeError(null)}
+                    className="ml-auto p-1 rounded-md text-red-600 hover:bg-red-100 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Theme Color Picker Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Primary */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Primary Color
+                    <span className="ml-2 text-xs text-slate-500">(Header, Launcher, User Messages)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.primary}
+                        onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.primary}
+                        onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#0F172A"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.primary }}
+                    />
+                  </div>
+                </div>
+
+                {/* Accent */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Accent Color
+                    <span className="ml-2 text-xs text-slate-500">(Send Button, Interactive States)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.accent}
+                        onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.accent}
+                        onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#3B82F6"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.accent }}
+                    />
+                  </div>
+                </div>
+
+                {/* Background */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Background Color
+                    <span className="ml-2 text-xs text-slate-500">(Chat Body)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.background}
+                        onChange={(e) => setTheme({ ...theme, background: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.background}
+                        onChange={(e) => setTheme({ ...theme, background: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#F8FAFC"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.background }}
+                    />
+                  </div>
+                </div>
+
+                {/* Surface */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Surface Color
+                    <span className="ml-2 text-xs text-slate-500">(Cards, Input, Suggestions)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.surface}
+                        onChange={(e) => setTheme({ ...theme, surface: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.surface}
+                        onChange={(e) => setTheme({ ...theme, surface: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#FFFFFF"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.surface }}
+                    />
+                  </div>
+                </div>
+
+                {/* Text Primary */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Text Primary Color
+                    <span className="ml-2 text-xs text-slate-500">(All Text)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.textPrimary}
+                        onChange={(e) => setTheme({ ...theme, textPrimary: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.textPrimary}
+                        onChange={(e) => setTheme({ ...theme, textPrimary: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#0F172A"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.textPrimary }}
+                    />
+                  </div>
+                </div>
+
+                {/* Border */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Border Color
+                    <span className="ml-2 text-xs text-slate-500">(Dividers, Input Borders)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.border}
+                        onChange={(e) => setTheme({ ...theme, border: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.border}
+                        onChange={(e) => setTheme({ ...theme, border: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#E2E8F0"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.border }}
+                    />
+                  </div>
+                </div>
+
+                {/* Success */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Success Color
+                    <span className="ml-2 text-xs text-slate-500">(Online Status)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={theme.success}
+                        onChange={(e) => setTheme({ ...theme, success: e.target.value })}
+                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={theme.success}
+                        onChange={(e) => setTheme({ ...theme, success: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="#22C55E"
+                      />
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
+                      style={{ backgroundColor: theme.success }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Preview */}
+              <div className="border-t border-slate-200 pt-6">
+                <h4 className="text-sm font-semibold text-slate-900 mb-4">Live Preview</h4>
+                <div className="flex justify-center">
+                  {/* Chat Widget Container */}
+                  <div 
+                    className="w-[400px] h-[600px] flex flex-col overflow-hidden rounded-2xl shadow-2xl"
+                    style={{ 
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                      borderWidth: "1px",
+                      borderStyle: "solid",
+                    }}
+                  >
+                    {/* Header */}
+                    <div
+                      className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b"
+                      style={{ 
+                        backgroundColor: theme.primary,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+                          style={{ backgroundColor: theme.accent, color: theme.surface }}
+                        >
+                          A
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: theme.surface }}>
+                            Agent Name
+                          </p>
+                          <p className="text-xs flex items-center gap-1" style={{ color: theme.success }}>
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: theme.success }}></span>
+                            Online
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        className="p-1 rounded transition-opacity"
+                        style={{ color: theme.surface }}
+                        disabled
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Messages Area */}
+                    <div 
+                      className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0"
+                      style={{ backgroundColor: theme.background }}
+                    >
+                      {/* User Message */}
+                      <div className="flex justify-end">
+                        <div
+                          className="rounded-2xl rounded-br-sm px-4 py-3 max-w-[80%]"
+                          style={{ backgroundColor: theme.primary }}
+                        >
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: theme.surface }}>
+                            Hello! How can I help you today?
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Assistant Message */}
+                      <div className="flex justify-start">
+                        <div
+                          className="rounded-2xl rounded-bl-sm px-4 py-3 max-w-[80%]"
+                          style={{ 
+                            backgroundColor: theme.surface, 
+                            borderColor: theme.border, 
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                          }}
+                        >
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: theme.textPrimary }}>
+                            Hi there! I'm here to assist you with any questions you might have. What would you like to know?
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* User Message 2 */}
+                      <div className="flex justify-end">
+                        <div
+                          className="rounded-2xl rounded-br-sm px-4 py-3 max-w-[80%]"
+                          style={{ backgroundColor: theme.primary }}
+                        >
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: theme.surface }}>
+                            What are your features?
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Assistant Message 2 */}
+                      <div className="flex justify-start">
+                        <div
+                          className="rounded-2xl rounded-bl-sm px-4 py-3 max-w-[80%]"
+                          style={{ 
+                            backgroundColor: theme.surface, 
+                            borderColor: theme.border, 
+                            borderWidth: "1px",
+                            borderStyle: "solid",
+                          }}
+                        >
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: theme.textPrimary }}>
+                            We offer a wide range of features including real-time chat, custom theming, and seamless integration with your website.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Input Area */}
+                    <div 
+                      className="border-t px-4 py-4 flex-shrink-0"
+                      style={{ 
+                        borderColor: theme.border,
+                        backgroundColor: theme.surface,
+                      }}
+                    >
+                      <div 
+                        className="flex items-end gap-2 rounded-lg border"
+                        style={{ 
+                          borderColor: theme.border,
+                          backgroundColor: theme.surface,
+                        }}
+                      >
+                        <textarea
+                          placeholder="Ask a question..."
+                          disabled
+                          rows={1}
+                          className="flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed"
+                          style={{ 
+                            color: theme.textPrimary,
+                            minHeight: "48px",
+                            maxHeight: "120px",
+                          }}
+                        />
+                        <button
+                          className="mb-2 mr-2 flex h-8 w-8 items-center justify-center rounded-lg transition-opacity"
+                          style={{ backgroundColor: theme.accent, color: theme.surface }}
+                          disabled
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                <button
+                  onClick={handleResetTheme}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Reset to Default
+                </button>
+                <button
+                  onClick={handleSaveTheme}
+                  disabled={isSavingTheme}
+                  className="inline-flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save className={`w-4 h-4 ${isSavingTheme ? 'animate-pulse' : ''}`} />
+                  <span>{isSavingTheme ? 'Saving...' : 'Save Theme'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Embed URL Success - Only show if credential exists and embedUrl is set */}
       {embedUrl && credential && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 rounded-lg text-green-600">
+              <div className="p-2 bg-slate-100 rounded-lg text-slate-700">
                 <Link2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-green-900">
+                <h3 className="text-sm font-semibold text-slate-900">
                   Embed Code Generated Successfully!
                 </h3>
-                <p className="text-xs text-green-700 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5">
                   Add this script tag to your website to embed the chatbot as a floating circle icon.
                 </p>
               </div>
@@ -440,7 +923,7 @@ export function EmbedConfigDocs() {
                 onClick={() => {
                   window.open(embedUrl, '_blank');
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-sm hover:shadow-md transition-all duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
               >
                 <Link2 className="w-4 h-4" />
                 <span>Test in New Tab</span>

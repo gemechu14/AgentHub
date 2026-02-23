@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
+import { DEFAULT_THEME, type EmbedTheme } from "@/types/theme";
 
 interface Message {
   id: string;
@@ -14,14 +15,16 @@ interface ChatWidgetStandaloneProps {
   token: string;
   agentId: string;
   agentName?: string;
+  theme?: EmbedTheme;
 }
 
-export default function ChatWidgetStandalone({ token, agentId, agentName = "Chatbot" }: ChatWidgetStandaloneProps) {
+export default function ChatWidgetStandalone({ token, agentId, agentName = "Chatbot", theme: propTheme }: ChatWidgetStandaloneProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = propTheme || DEFAULT_THEME;
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -101,28 +104,28 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
             right: '24px',
             width: '320px',
             height: '450px',
-            backgroundColor: 'white',
+            backgroundColor: theme.surface,
             borderRadius: '16px',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-            border: '1px solid #e5e7eb',
+            border: `1px solid ${theme.border}`,
             display: 'flex',
             flexDirection: 'column',
             pointerEvents: 'auto',
             animation: 'slideUp 0.3s ease-out'
           }}
         >
-          {/* Header */}
+          {/* Header - uses primary */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '16px',
-            backgroundColor: '#2563eb',
-            color: 'white',
+            backgroundColor: theme.primary,
+            color: theme.surface,
             borderRadius: '16px 16px 0 0',
             flexShrink: 0
           }}>
-            <span style={{ fontWeight: 600 }}>{agentName}</span>
+            <span style={{ fontWeight: 600, color: theme.surface }}>{agentName}</span>
             <button
               onClick={() => setIsOpen(false)}
               style={{
@@ -138,13 +141,14 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
             </button>
           </div>
 
-          {/* Messages Area */}
+          {/* Messages Area - uses background */}
           <div style={{
             flex: 1,
             padding: '16px',
             overflowY: 'auto',
             fontSize: '14px',
-            color: '#4b5563',
+            color: theme.textPrimary,
+            backgroundColor: theme.background,
             minHeight: 0
           }}>
             {messages.length === 0 ? (
@@ -167,8 +171,8 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
                         maxWidth: '80%',
                         borderRadius: '8px',
                         padding: '8px 12px',
-                        backgroundColor: message.role === "user" ? '#2563eb' : '#f3f4f6',
-                        color: message.role === "user" ? 'white' : '#1f2937',
+                        backgroundColor: message.role === "user" ? theme.primary : theme.surface,
+                        color: message.role === "user" ? theme.surface : theme.textPrimary,
                         wordWrap: 'break-word',
                         overflowWrap: 'anywhere',
                         whiteSpace: 'pre-wrap'
@@ -192,28 +196,31 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
                     <div style={{
                       borderRadius: '8px',
                       padding: '8px 12px',
-                      backgroundColor: '#f3f4f6'
+                      backgroundColor: theme.surface
                     }}>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <div style={{
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: '#9ca3af',
+                          backgroundColor: theme.textPrimary,
+                          opacity: 0.6,
                           animation: 'bounce 1.4s infinite'
                         }} />
                         <div style={{
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: '#9ca3af',
+                          backgroundColor: theme.textPrimary,
+                          opacity: 0.6,
                           animation: 'bounce 1.4s infinite 0.2s'
                         }} />
                         <div style={{
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: '#9ca3af',
+                          backgroundColor: theme.textPrimary,
+                          opacity: 0.6,
                           animation: 'bounce 1.4s infinite 0.4s'
                         }} />
                       </div>
@@ -237,10 +244,11 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
             </div>
           )}
 
-          {/* Input Area */}
+          {/* Input Area - input/suggestions use surface, border uses border */}
           <div style={{
             padding: '12px',
-            borderTop: '1px solid #e5e7eb',
+            borderTop: `1px solid ${theme.border}`,
+            backgroundColor: theme.surface,
             flexShrink: 0
           }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
@@ -258,18 +266,20 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
                 disabled={isLoading || !agentId}
                 style={{
                   flex: 1,
-                  border: '1px solid #d1d5db',
+                  border: `1px solid ${theme.border}`,
                   borderRadius: '8px',
                   padding: '8px 12px',
                   fontSize: '14px',
-                  outline: 'none'
+                  outline: 'none',
+                  backgroundColor: theme.surface,
+                  color: theme.textPrimary,
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#2563eb';
-                  e.target.style.boxShadow = '0 0 0 2px rgba(37, 99, 235, 0.2)';
+                  e.target.style.borderColor = theme.accent;
+                  e.target.style.boxShadow = `0 0 0 2px ${theme.accent}33`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#d1d5db';
+                  e.target.style.borderColor = theme.border;
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -279,8 +289,8 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
                 style={{
                   padding: '8px',
                   borderRadius: '8px',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
+                  backgroundColor: theme.accent,
+                  color: theme.surface,
                   border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
@@ -297,7 +307,7 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
         </div>
       )}
 
-      {/* Floating Chat Icon - ONLY THE CIRCLE, NO CONTAINER */}
+      {/* Floating Chat Icon - launcher button uses primary */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -309,8 +319,8 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
             width: '64px',
             height: '64px',
             borderRadius: '50%',
-            backgroundColor: '#2563eb',
-            color: 'white',
+            backgroundColor: theme.primary,
+            color: theme.surface,
             border: 'none',
             outline: 'none',
             cursor: 'pointer',
@@ -326,9 +336,11 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.opacity = '0.9';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.opacity = '1';
           }}
           aria-label="Open chat"
         >

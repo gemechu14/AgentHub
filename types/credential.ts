@@ -1,3 +1,5 @@
+import type { EmbedTheme } from "./theme";
+
 export interface Credential {
   id: string;
   agent_id: string;
@@ -9,6 +11,7 @@ export interface Credential {
   name?: string;
   embed_url?: string; // Current embed URL if available
   embed_token?: string; // Current embed token if available
+  theme?: EmbedTheme;
 }
 
 export interface CreateCredentialRequest {

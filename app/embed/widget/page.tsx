@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Send, X, MessageCircle, Lightbulb, ChevronUp } from "lucide-react";
 import { validateEmbedToken } from "@/services/embedService";
+import { DEFAULT_THEME, type EmbedTheme } from "@/types/theme";
 
 interface Message {
   id: string;
@@ -82,6 +83,7 @@ export default function EmbedWidgetPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [showRecommended, setShowRecommended] = useState(true);
   const [isInIframe, setIsInIframe] = useState(false);
+  const [theme, setTheme] = useState<EmbedTheme>(DEFAULT_THEME);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Detect iframe on mount (client-only)
@@ -147,6 +149,10 @@ export default function EmbedWidgetPage() {
       setAgentId(data.agent_id);
       setAgentName(data.agent_name || "Chatbot");
       setRecommendedQuestions(data.recommended_questions || []);
+      // Set theme from API response or use default
+      if (data.theme) {
+        setTheme(data.theme);
+      }
       setIsValidating(false);
     } catch (err: any) {
       console.error("Failed to validate token:", err);
@@ -248,7 +254,10 @@ export default function EmbedWidgetPage() {
     // Loading spinner
     if (isValidating) {
       const spinnerCircle = (
-        <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-blue-500 shadow-lg cursor-pointer">
+        <div 
+          className="flex h-[60px] w-[60px] items-center justify-center rounded-full shadow-lg cursor-pointer"
+          style={{ backgroundColor: theme.primary }}
+        >
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
         </div>
       );
@@ -283,11 +292,20 @@ export default function EmbedWidgetPage() {
       );
     }
 
-    // Normal circle button
+    // Normal circle button - launcher button uses primary
     const circleButton = (
       <button
         onClick={handleOpen}
-        className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-blue-500 text-white shadow-lg hover:bg-blue-600 transition-all hover:scale-110 border-none outline-none cursor-pointer"
+        className="flex h-[60px] w-[60px] items-center justify-center rounded-full text-white shadow-lg transition-all hover:scale-110 border-none outline-none cursor-pointer"
+        style={{ 
+          backgroundColor: theme.primary,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = "0.9";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = "1";
+        }}
         aria-label="Open chat"
       >
         <MessageCircle className="h-7 w-7" />
@@ -308,19 +326,44 @@ export default function EmbedWidgetPage() {
   // --- Chat popup (open state) ---
   const chatPopup = (
     <div
-      className={`flex flex-col bg-white overflow-hidden rounded-2xl shadow-2xl border border-slate-200 ${
+      className={`flex flex-col overflow-hidden rounded-2xl shadow-2xl ${
         isInIframe ? "w-full h-full" : "w-[400px] h-[600px]"
       }`}
+      style={{ 
+        backgroundColor: theme.surface,
+        borderColor: theme.border,
+        borderWidth: "1px",
+        borderStyle: "solid",
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-4 py-3 flex-shrink-0">
+      {/* Header - uses primary */}
+      <div 
+        className="flex items-center justify-between border-b px-4 py-3 flex-shrink-0"
+        style={{ 
+          backgroundColor: theme.primary,
+          borderColor: theme.border,
+        }}
+      >
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white text-sm font-semibold">
+          <div 
+            className="flex h-8 w-8 items-center justify-center rounded-full text-white text-sm font-semibold"
+            style={{ backgroundColor: theme.accent }}
+          >
             {agentName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-white">{agentName}</h1>
-            <p className="text-xs text-slate-400">Online</p>
+            <h1 
+              className="text-sm font-semibold"
+              style={{ color: theme.surface }}
+            >
+              {agentName}
+            </h1>
+            <p 
+              className="text-xs"
+              style={{ color: theme.success }}
+            >
+              Online
+            </p>
           </div>
         </div>
         <button
@@ -329,34 +372,67 @@ export default function EmbedWidgetPage() {
             e.stopPropagation();
             handleClose();
           }}
-          className="p-1 rounded text-slate-400 hover:text-white transition-colors"
+          className="p-1 rounded transition-colors"
+          style={{ 
+            color: theme.surface,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = "0.8";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = "1";
+          }}
           title="Close"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-white min-h-0">
+      {/* Messages Area - uses background */}
+      <div 
+        className="flex-1 overflow-y-auto min-h-0"
+        style={{ backgroundColor: theme.background }}
+      >
         {messages.length === 0 ? (
           <div className="flex h-full flex-col">
-            {/* Try Asking Section */}
+            {/* Try Asking Section - cards use surface */}
             {recommendedQuestions.length > 0 && (
-              <div className="border-b border-slate-200 bg-slate-50">
+              <div 
+                className="border-b"
+                style={{ 
+                  borderColor: theme.border,
+                  backgroundColor: theme.surface,
+                }}
+              >
                 <button
                   onClick={() => setShowRecommended(!showRecommended)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-slate-100 transition-colors"
+                  className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors"
+                  style={{ 
+                    color: theme.textPrimary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.9";
+                    e.currentTarget.style.backgroundColor = theme.background;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     <Lightbulb className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm font-medium text-slate-900">
+                    <span 
+                      className="text-sm font-medium"
+                      style={{ color: theme.textPrimary }}
+                    >
                       Try Asking
                     </span>
                   </div>
                   <ChevronUp
-                    className={`w-4 h-4 text-slate-500 transition-transform ${
+                    className={`w-4 h-4 transition-transform ${
                       showRecommended ? "" : "rotate-180"
                     }`}
+                    style={{ color: theme.textPrimary }}
                   />
                 </button>
                 {showRecommended && (
@@ -365,7 +441,24 @@ export default function EmbedWidgetPage() {
                       <button
                         key={index}
                         onClick={() => handleSendMessage(question)}
-                        className="w-full text-left rounded-lg bg-slate-200 hover:bg-slate-300 px-3 py-2 text-sm text-slate-600 transition-colors"
+                        className="w-full text-left rounded-lg px-3 py-2 text-sm transition-colors"
+                        style={{ 
+                          backgroundColor: theme.surface,
+                          color: theme.textPrimary,
+                          borderColor: theme.border,
+                          borderWidth: "1px",
+                          borderStyle: "solid",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = "0.9";
+                          e.currentTarget.style.backgroundColor = theme.accent;
+                          e.currentTarget.style.color = theme.surface;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = "1";
+                          e.currentTarget.style.backgroundColor = theme.surface;
+                          e.currentTarget.style.color = theme.textPrimary;
+                        }}
                       >
                         {question}
                       </button>
@@ -377,7 +470,12 @@ export default function EmbedWidgetPage() {
 
             {/* Empty State */}
             <div className="flex-1 flex items-center justify-center p-4">
-              <p className="text-sm text-slate-500">Start a conversation...</p>
+              <p 
+                className="text-sm"
+                style={{ color: theme.textPrimary }}
+              >
+                Start a conversation...
+              </p>
             </div>
           </div>
         ) : (
@@ -390,15 +488,18 @@ export default function EmbedWidgetPage() {
                 }`}
               >
                 <div
-                  className={`max-w-[80%] min-w-0 rounded-2xl px-4 py-3 ${
-                    message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : "bg-slate-100 text-slate-900"
-                  }`}
+                  className="max-w-[80%] min-w-0 rounded-2xl px-4 py-3"
+                  style={{
+                    backgroundColor: message.role === "user" ? theme.primary : theme.surface,
+                    color: message.role === "user" ? theme.surface : theme.textPrimary,
+                  }}
                 >
                   <div
                     className="text-sm whitespace-pre-wrap break-words"
-                    style={{ overflowWrap: "anywhere" }}
+                    style={{ 
+                      overflowWrap: "anywhere",
+                      color: message.role === "user" ? theme.surface : theme.textPrimary,
+                    }}
                   >
                     {parseMarkdown(message.content)}
                   </div>
@@ -407,16 +508,30 @@ export default function EmbedWidgetPage() {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="rounded-2xl bg-slate-100 px-4 py-3">
+                <div 
+                  className="rounded-2xl px-4 py-3"
+                  style={{ backgroundColor: theme.surface }}
+                >
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400" />
-                    <div
-                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                      style={{ animationDelay: "0.2s" }}
+                    <div 
+                      className="h-2 w-2 animate-bounce rounded-full"
+                      style={{ backgroundColor: theme.textPrimary, opacity: 0.6 }}
                     />
                     <div
-                      className="h-2 w-2 animate-bounce rounded-full bg-slate-400"
-                      style={{ animationDelay: "0.4s" }}
+                      className="h-2 w-2 animate-bounce rounded-full"
+                      style={{ 
+                        backgroundColor: theme.textPrimary, 
+                        opacity: 0.6,
+                        animationDelay: "0.2s" 
+                      }}
+                    />
+                    <div
+                      className="h-2 w-2 animate-bounce rounded-full"
+                      style={{ 
+                        backgroundColor: theme.textPrimary, 
+                        opacity: 0.6,
+                        animationDelay: "0.4s" 
+                      }}
                     />
                   </div>
                 </div>
@@ -434,9 +549,21 @@ export default function EmbedWidgetPage() {
         </div>
       )}
 
-      {/* Input Area */}
-      <div className="border-t border-slate-200 bg-white p-4 flex-shrink-0">
-        <div className="flex items-end gap-2 rounded-lg border border-slate-300 bg-slate-50">
+      {/* Input Area - input/suggestions use surface, border uses border */}
+      <div 
+        className="border-t p-4 flex-shrink-0"
+        style={{ 
+          borderColor: theme.border,
+          backgroundColor: theme.surface,
+        }}
+      >
+        <div 
+          className="flex items-end gap-2 rounded-lg border"
+          style={{ 
+            borderColor: theme.border,
+            backgroundColor: theme.surface,
+          }}
+        >
           <textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
@@ -444,10 +571,11 @@ export default function EmbedWidgetPage() {
             placeholder="Ask a question..."
             disabled={isLoading || !agentId}
             rows={1}
-            className="flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 resize-none border-0 bg-transparent px-4 py-3 text-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               maxHeight: "120px",
               minHeight: "48px",
+              color: theme.textPrimary,
             }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -458,7 +586,20 @@ export default function EmbedWidgetPage() {
           <button
             onClick={() => handleSendMessage()}
             disabled={!inputMessage.trim() || isLoading || !agentId}
-            className="mb-2 mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed"
+            className="mb-2 mr-2 flex h-8 w-8 items-center justify-center rounded-lg text-white transition-colors disabled:cursor-not-allowed"
+            style={{ 
+              backgroundColor: theme.accent,
+            }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.opacity = "0.9";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.opacity = "1";
+              }
+            }}
             title="Send message"
           >
             <Send className="h-4 w-4" />

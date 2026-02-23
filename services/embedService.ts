@@ -1,4 +1,5 @@
 import { api } from "./apiClient";
+import type { EmbedTheme } from "@/types/theme";
 
 export interface LaunchEmbedRequest {
   agent_id: string;
@@ -24,6 +25,7 @@ export interface ValidateTokenResponse {
   credential_id?: string;
   status: string;
   recommended_questions?: string[];
+  theme?: EmbedTheme;
 }
 
 /**
@@ -53,5 +55,21 @@ export async function getEmbedUrl(
     }
     throw err;
   }
+}
+
+/**
+ * Update theme for a credential
+ * PATCH /agents/{account_id}/{agent_id}/credentials/{credential_id}/theme
+ */
+export async function updateCredentialTheme(
+  accountId: string,
+  agentId: string,
+  credentialId: string,
+  theme: EmbedTheme
+): Promise<{ theme: EmbedTheme }> {
+  return api.patch<{ theme: EmbedTheme }>(
+    `/agents/${accountId}/${agentId}/credentials/${credentialId}/theme`,
+    { theme }
+  );
 }
 
