@@ -15,6 +15,7 @@ export default function EmbedWidgetPage() {
   const [token, setToken] = useState<string | null>(null);
   const [agentId, setAgentId] = useState<string | null>(null);
   const [agentName, setAgentName] = useState<string>("Chatbot");
+  const [recommendedQuestions, setRecommendedQuestions] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -79,6 +80,7 @@ export default function EmbedWidgetPage() {
       const data = await validateEmbedToken(tokenValue);
       setAgentId(data.agent_id);
       setAgentName(data.agent_name || "Chatbot");
+      setRecommendedQuestions(data.recommended_questions || []);
       setIsValidating(false);
     } catch (err: any) {
       console.error("Failed to validate token:", err);
@@ -109,12 +111,14 @@ export default function EmbedWidgetPage() {
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: inputMessage.trim(),
+      content: messageToSend,
       created_at: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
+    if (!questionOverride) {
+      setInputMessage("");
+    }
     setIsLoading(true);
     setError(null);
 
@@ -128,7 +132,7 @@ export default function EmbedWidgetPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          question: inputMessage.trim(),
+          question: messageToSend,
         }),
       });
 
@@ -269,35 +273,40 @@ export default function EmbedWidgetPage() {
       <div className="flex-1 overflow-y-auto bg-white min-h-0">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col">
-            {/* Recommended Section */}
-            <div className="border-b border-slate-200 bg-slate-50">
-              <button
-                onClick={() => setShowRecommended(!showRecommended)}
-                className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium text-slate-900">
-                    Recommended
-                  </span>
-                </div>
-                <ChevronUp
-                  className={`w-4 h-4 text-slate-500 transition-transform ${
-                    showRecommended ? "" : "rotate-180"
-                  }`}
-                />
-              </button>
-              {showRecommended && (
-                <div className="px-4 pb-4 space-y-2">
-                  <div className="rounded-lg bg-slate-200 px-3 py-2 text-sm text-slate-600">
-                    Ask me anything about your data
+            {/* Try Asking Section */}
+            {recommendedQuestions.length > 0 && (
+              <div className="border-b border-slate-200 bg-slate-50">
+                <button
+                  onClick={() => setShowRecommended(!showRecommended)}
+                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-medium text-slate-900">
+                      Try Asking
+                    </span>
                   </div>
-                  <div className="rounded-lg bg-slate-200 px-3 py-2 text-sm text-slate-600">
-                    What insights can you provide?
+                  <ChevronUp
+                    className={`w-4 h-4 text-slate-500 transition-transform ${
+                      showRecommended ? "" : "rotate-180"
+                    }`}
+                  />
+                </button>
+                {showRecommended && (
+                  <div className="px-4 pb-4 space-y-2">
+                    {recommendedQuestions.map((question, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSendMessage(question)}
+                        className="w-full text-left rounded-lg bg-slate-200 hover:bg-slate-300 px-3 py-2 text-sm text-slate-600 transition-colors"
+                      >
+                        {question}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Empty State */}
             <div className="flex-1 flex items-center justify-center p-4">

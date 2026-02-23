@@ -41,6 +41,8 @@ export interface Agent {
   custom_tone_rows_enabled?: boolean;
   custom_tone_schema?: string;
   custom_tone_rows?: string;
+  // Recommended questions
+  recommended_questions?: string[];
 }
 
 // Request types for API
@@ -58,6 +60,8 @@ export interface CreateAgentRequest {
   custom_tone_rows_enabled?: boolean;
   custom_tone_schema?: string;
   custom_tone_rows?: string;
+  // Recommended questions
+  recommended_questions?: string[];
 }
 
 export interface UpdateAgentRequest {
@@ -74,6 +78,8 @@ export interface UpdateAgentRequest {
   custom_tone_rows_enabled?: boolean;
   custom_tone_schema?: string;
   custom_tone_rows?: string;
+  // Recommended questions
+  recommended_questions?: string[];
 }
 
 // Response types

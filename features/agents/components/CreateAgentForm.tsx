@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bot, Eye, EyeOff, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Bot, Eye, EyeOff, AlertCircle, CheckCircle, XCircle, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { createAgent, getAccountId } from "@/services/agentsService";
@@ -50,6 +50,8 @@ export function CreateAgentForm() {
   const [customToneRowsEnabled, setCustomToneRowsEnabled] = useState(false);
   const [customToneSchema, setCustomToneSchema] = useState("");
   const [customToneRows, setCustomToneRows] = useState("");
+  // Recommended questions (max 2)
+  const [recommendedQuestions, setRecommendedQuestions] = useState<string[]>([]);
   
   const [connectionType, setConnectionType] = useState("None");
   // PowerBI fields
@@ -211,6 +213,10 @@ export function CreateAgentForm() {
       custom_tone_rows_enabled: customToneEnabled && customToneRowsEnabled,
       custom_tone_schema: customToneEnabled && customToneSchemaEnabled ? customToneSchema.trim() || undefined : undefined,
       custom_tone_rows: customToneEnabled && customToneRowsEnabled ? customToneRows.trim() || undefined : undefined,
+      // Recommended questions
+      recommended_questions: recommendedQuestions.filter(q => q.trim() !== "").length > 0 
+        ? recommendedQuestions.filter(q => q.trim() !== "") 
+        : undefined,
     };
 
     setIsLoading(true);
@@ -485,6 +491,59 @@ export function CreateAgentForm() {
                   Your API key is encrypted and stored securely. Get your key from
                   platform.openai.com
                 </p>
+              </div>
+
+              {/* Recommended Questions */}
+              <div>
+                <label className="block text-sm font-medium text-slate-900 mb-2">
+                  Recommended Questions
+                </label>
+                <p className="text-xs text-slate-500 mb-3">
+                  Add up to 2 suggested questions to help users get started (optional)
+                </p>
+                <div className="space-y-3">
+                  {recommendedQuestions.map((question, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <input
+                        type="text"
+                        value={question}
+                        onChange={(e) => {
+                          const updated = [...recommendedQuestions];
+                          updated[index] = e.target.value;
+                          setRecommendedQuestions(updated);
+                        }}
+                        placeholder={`Question ${index + 1}...`}
+                        className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      {recommendedQuestions.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRecommendedQuestions(recommendedQuestions.filter((_, i) => i !== index));
+                          }}
+                          className="mt-0.5 p-2 text-slate-400 hover:text-red-600 transition-colors"
+                          title="Remove question"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {recommendedQuestions.length < 2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (recommendedQuestions.length < 2) {
+                          setRecommendedQuestions([...recommendedQuestions, ""]);
+                        }
+                      }}
+                      className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Question</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* System Instructions - hidden for now */}

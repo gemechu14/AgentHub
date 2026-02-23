@@ -22,6 +22,7 @@ export interface ValidateTokenResponse {
   agent_name: string;
   account_id: string;
   credential_id: string;
+  recommended_questions?: string[];
 }
 
 /**
