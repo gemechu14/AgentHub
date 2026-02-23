@@ -18,3 +18,4 @@ export const DEFAULT_THEME: EmbedTheme = {
   success: "#22C55E",
 };
 
+
