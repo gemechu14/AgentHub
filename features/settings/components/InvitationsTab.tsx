@@ -160,17 +160,17 @@ export function InvitationsTab() {
     <>
       <ToastContainer toasts={toasts} onClose={removeToast} />
       
-      <div className="space-y-6 w-[65%]">
+      <div className="space-y-4 md:space-y-6 w-full lg:w-[65%]">
         {/* Invite Team Member Section */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8">
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4 md:mb-6">
             Invite Team Member
           </h2>
 
           <form onSubmit={handleInvite} className="space-y-4">
-            <div className="flex items-end gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-900 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-slate-900 mb-1.5 md:mb-2">
                   Email
                 </label>
                 <input
@@ -182,7 +182,7 @@ export function InvitationsTab() {
                   }}
                   placeholder="email@example.com"
                   required
-                  className={`w-full rounded-lg border bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
+                  className={`w-full rounded-lg border bg-white px-3 md:px-4 py-2 md:py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 ${
                     inviteError
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                       : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
@@ -190,14 +190,14 @@ export function InvitationsTab() {
                 />
               </div>
 
-              <div className="w-32">
-                <label className="block text-sm font-medium text-slate-900 mb-2">
+              <div className="w-full sm:w-32">
+                <label className="block text-xs md:text-sm font-medium text-slate-900 mb-1.5 md:mb-2">
                   Role
                 </label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 md:px-4 py-2 md:py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   required
                 >
                   <option value="MEMBER">Member</option>
@@ -208,9 +208,9 @@ export function InvitationsTab() {
               <button
                 type="submit"
                 disabled={inviteLoading || (inviteRole === "MEMBER" && !hasAgents)}
-                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full sm:w-auto rounded-lg bg-blue-500 px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <ArrowUp className="w-4 h-4" />
+                <ArrowUp className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 {inviteLoading ? "Sending..." : "Send Invite"}
               </button>
             </div>
@@ -218,19 +218,19 @@ export function InvitationsTab() {
             {/* Agent Selection - Only show for MEMBER role */}
             {inviteRole === "MEMBER" && (
               <div>
-                <label className="block text-sm font-medium text-slate-900 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-slate-900 mb-1.5 md:mb-2">
                   Assign Agents <span className="text-red-500">*</span>
                 </label>
                 {agentsLoading ? (
-                  <p className="text-sm text-slate-500">Loading agents...</p>
+                  <p className="text-xs md:text-sm text-slate-500">Loading agents...</p>
                 ) : !hasAgents ? (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <p className="text-sm text-amber-800">
+                    <p className="text-xs md:text-sm text-amber-800">
                       No agents available. Please create at least one agent before inviting members.
                     </p>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-slate-300 bg-white p-4 max-h-48 overflow-y-auto">
+                  <div className="rounded-lg border border-slate-300 bg-white p-3 md:p-4 max-h-48 overflow-y-auto">
                     <div className="space-y-2">
                       {agents?.map((agent) => (
                         <label
@@ -251,7 +251,7 @@ export function InvitationsTab() {
                             }}
                             className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                           />
-                          <span className="text-sm text-slate-900">{agent.name}</span>
+                          <span className="text-xs md:text-sm text-slate-900">{agent.name}</span>
                         </label>
                       ))}
                     </div>
@@ -275,31 +275,31 @@ export function InvitationsTab() {
         </div>
 
         {/* Pending Invitations Section */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8">
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4 md:mb-6">
             Pending Invitations
           </h2>
 
           {pendingLoading ? (
             <div className="text-center py-12">
-              <p className="text-sm text-slate-500">Loading...</p>
+              <p className="text-xs md:text-sm text-slate-500">Loading...</p>
             </div>
           ) : pendingMembers.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm text-slate-500">No pending invitations</p>
+              <p className="text-xs md:text-sm text-slate-500">No pending invitations</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Status
                     </th>
                   </tr>
@@ -307,15 +307,15 @@ export function InvitationsTab() {
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {pendingMembers.map((member, index) => (
                     <tr key={member.email || index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                      <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4 text-xs md:text-sm text-slate-900 break-words">
                         {member.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {member.role === "ADMIN" ? "Admin" : "Member"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                           Pending
                         </span>

@@ -90,7 +90,7 @@ export function ProfileTab() {
 
   if (authLoading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 w-[65%]">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 w-full lg:w-[65%]">
         <div className="text-center py-12">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-slate-900 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
           <p className="mt-4 text-slate-600 text-sm">Loading profile...</p>
@@ -101,7 +101,7 @@ export function ProfileTab() {
 
   if (!user) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 w-[65%]">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 w-full lg:w-[65%]">
         <div className="text-center py-12">
           <p className="text-sm text-slate-500">Unable to load profile data</p>
         </div>
@@ -113,8 +113,8 @@ export function ProfileTab() {
     <>
       <ToastContainer toasts={toasts} onClose={removeToast} />
       
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 w-[65%]">
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 w-full lg:w-[65%]">
+        <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4 md:mb-6">
           Profile Settings
         </h2>
 
@@ -126,17 +126,17 @@ export function ProfileTab() {
           </div>
         )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
         {/* First Name */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 mb-2">
+          <label className="block text-xs md:text-sm font-medium text-slate-900 mb-1.5 md:mb-2">
             First Name
           </label>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 md:px-4 py-2 md:py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Enter your first name"
             required
           />
@@ -144,14 +144,14 @@ export function ProfileTab() {
 
         {/* Last Name */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 mb-2">
+          <label className="block text-xs md:text-sm font-medium text-slate-900 mb-1.5 md:mb-2">
             Last Name
           </label>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 md:px-4 py-2 md:py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Enter your last name"
             required
           />
@@ -159,26 +159,26 @@ export function ProfileTab() {
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 mb-2">
+          <label className="block text-xs md:text-sm font-medium text-slate-900 mb-1.5 md:mb-2">
             Email
           </label>
           <input
             type="email"
             value={email}
             disabled
-            className="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed"
+            className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 md:px-4 py-2 md:py-2.5 text-sm text-slate-500 cursor-not-allowed"
           />
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-1.5 md:mt-2 text-xs text-slate-500">
             Email cannot be changed
           </p>
         </div>
 
         {/* Save Changes Button */}
-        <div className="pt-4">
+        <div className="pt-2 md:pt-4">
           <button
             type="submit"
             disabled={isSaving || !hasChanges}
-            className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto rounded-lg bg-blue-500 px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? "Saving..." : "Save Changes"}
           </button>

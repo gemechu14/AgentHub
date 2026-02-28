@@ -218,10 +218,10 @@ export function MembersTab() {
     <>
       <ToastContainer toasts={toasts} onClose={removeToast} />
       
-      <div className="w-[65%] mb-8">
+      <div className="w-full lg:w-[65%] mb-6 md:mb-8">
         {/* Members Table Section */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-6 lg:p-8 mb-4 md:mb-6">
+          <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-4 md:mb-6">
             Team Members
           </h2>
 
@@ -239,47 +239,29 @@ export function MembersTab() {
               <p className="text-sm text-slate-500">No team members found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-8 px-8 pb-6">
-              <div className="inline-block min-w-full align-middle">
-                <div className="overflow-hidden rounded-lg">
-                  <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                          Email
-                        </th>
-                        <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                          Role
-                        </th>
-                        <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                          Assigned Agents
-                        </th>
-                        <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                          Status
-                        </th>
-                        <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 bg-white">
-                      {members.map((member, index) => (
-                        <tr
-                          key={member.email || index}
-                          className="hover:bg-slate-50 transition-colors"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-slate-900">
-                              {member.email}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {members.map((member, index) => {
+                  const assignedAgents = getAssignedAgents(member);
+                  const isMemberRole = member.role?.toUpperCase() === "MEMBER";
+                  return (
+                    <div
+                      key={member.email || index}
+                      className="bg-slate-50 rounded-lg border border-slate-200 p-4 space-y-3"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-slate-900 break-words mb-2">
+                            {member.email}
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
                             {editingMember?.email === member.email ? (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <select
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value)}
-                                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                                  className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   disabled={updateLoading}
                                 >
                                   <option value="MEMBER">Member</option>
@@ -303,101 +285,227 @@ export function MembersTab() {
                                 </button>
                               </div>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {formatRole(member.role)}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {(() => {
-                              const assignedAgents = getAssignedAgents(member);
-                              const isMember = member.role?.toUpperCase() === "MEMBER";
-                              
-                              if (isMember && assignedAgents.length > 0) {
-                                return (
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {assignedAgents.map((agentName, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
-                                      >
-                                        {agentName}
-                                      </span>
-                                    ))}
-                                  </div>
-                                );
-                              } else if (isMember) {
-                                return (
-                                  <span className="text-xs text-slate-400 italic">No agents assigned</span>
-                                );
-                              } else {
-                                return (
-                                  <span className="text-xs text-slate-400">—</span>
-                                );
-                              }
-                            })()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                member.status === "active"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {member.status === "active" ? "Active" : "Pending"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            {editingMember?.email === member.email ? (
-                              updateError && (
-                                <span className="text-xs text-red-600">
-                                  {updateError}
+                              <>
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {formatRole(member.role)}
                                 </span>
-                              )
-                            ) : (
-                              <div className="flex justify-end">
-                                <KebabMenu
-                                  onEdit={() => handleStartEdit(member)}
-                                  onDelete={() => handleDeleteClick(member)}
-                                />
-                              </div>
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                    member.status === "active"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-amber-100 text-amber-800"
+                                  }`}
+                                >
+                                  {member.status === "active" ? "Active" : "Pending"}
+                                </span>
+                              </>
                             )}
-                          </td>
+                          </div>
+                        </div>
+                        {editingMember?.email !== member.email && (
+                          <div className="ml-2">
+                            <KebabMenu
+                              onEdit={() => handleStartEdit(member)}
+                              onDelete={() => handleDeleteClick(member)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Assigned Agents - Always visible on mobile */}
+                      {isMemberRole && (
+                        <div className="pt-2 border-t border-slate-200">
+                          <div className="text-xs font-semibold text-slate-700 mb-2">
+                            Assigned Agents:
+                          </div>
+                          {assignedAgents.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {assignedAgents.map((agentName, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                                >
+                                  {agentName}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">No agents assigned</span>
+                          )}
+                        </div>
+                      )}
+                      
+                      {editingMember?.email === member.email && updateError && (
+                        <div className="text-xs text-red-600 pt-2 border-t border-slate-200">
+                          {updateError}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pb-4 md:pb-6">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden rounded-lg">
+                    <table className="min-w-full divide-y divide-slate-200">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+                            Email
+                          </th>
+                          <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+                            Role
+                          </th>
+                          <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+                            Assigned Agents
+                          </th>
+                          <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+                            Status
+                          </th>
+                          <th className="px-3 md:px-4 lg:px-6 py-2.5 md:py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 bg-white">
+                        {members.map((member, index) => (
+                          <tr
+                            key={member.email || index}
+                            className="hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                              <div className="text-xs md:text-sm font-medium text-slate-900 break-words">
+                                {member.email}
+                              </div>
+                            </td>
+                            <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4 whitespace-nowrap">
+                              {editingMember?.email === member.email ? (
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    value={editRole}
+                                    onChange={(e) => setEditRole(e.target.value)}
+                                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                                    disabled={updateLoading}
+                                  >
+                                    <option value="MEMBER">Member</option>
+                                    <option value="ADMIN">Admin</option>
+                                  </select>
+                                  <button
+                                    onClick={handleUpdateMember}
+                                    disabled={updateLoading}
+                                    className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
+                                    title="Save"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    disabled={updateLoading}
+                                    className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                    title="Cancel"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {formatRole(member.role)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                              {(() => {
+                                const assignedAgents = getAssignedAgents(member);
+                                const isMember = member.role?.toUpperCase() === "MEMBER";
+                                
+                                if (isMember && assignedAgents.length > 0) {
+                                  return (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {assignedAgents.map((agentName, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                                        >
+                                          {agentName}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  );
+                                } else if (isMember) {
+                                  return (
+                                    <span className="text-xs text-slate-400 italic">No agents assigned</span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="text-xs text-slate-400">—</span>
+                                  );
+                                }
+                              })()}
+                            </td>
+                            <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                  member.status === "active"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                {member.status === "active" ? "Active" : "Pending"}
+                              </span>
+                            </td>
+                            <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4 whitespace-nowrap text-right text-sm font-medium">
+                              {editingMember?.email === member.email ? (
+                                updateError && (
+                                  <span className="text-xs text-red-600">
+                                    {updateError}
+                                  </span>
+                                )
+                              ) : (
+                                <div className="flex justify-end">
+                                  <KebabMenu
+                                    onEdit={() => handleStartEdit(member)}
+                                    onDelete={() => handleDeleteClick(member)}
+                                  />
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {deletingMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 max-w-md w-full">
+            <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2">
               Remove Team Member
             </h3>
-            <p className="text-sm text-slate-600 mb-6">
+            <p className="text-xs md:text-sm text-slate-600 mb-4 md:mb-6">
               Are you sure you want to remove <strong>{deletingMember.email}</strong> from
               your team? This action cannot be undone.
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleteLoading}
-                className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-xs md:text-sm font-semibold text-white shadow-sm hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleteLoading ? "Removing..." : "Remove"}
               </button>
               <button
                 onClick={handleCancelDelete}
                 disabled={deleteLoading}
-                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs md:text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>

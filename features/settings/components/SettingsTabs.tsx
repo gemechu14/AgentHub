@@ -51,22 +51,22 @@ export function SettingsTabs() {
   }, [isMember, activeTab]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Tabs Navigation */}
-      <div className="flex gap-6 border-b border-slate-200 -mb-[1px]">
+      <div className="flex gap-2 md:gap-6 border-b border-slate-200 -mb-[1px] overflow-x-auto">
         {availableTabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 pb-3 text-sm font-medium transition-colors border-b-2 ${
+              className={`flex items-center gap-1.5 md:gap-2 pb-3 text-xs md:text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
                 activeTab === tab.id
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-slate-500 hover:text-slate-700"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
               <span>{tab.label}</span>
             </button>
           );
@@ -74,7 +74,7 @@ export function SettingsTabs() {
       </div>
 
       {/* Tab Content */}
-      <div className="mt-6">
+      <div className="mt-4 md:mt-6">
         {activeTab === "profile" && <ProfileTab />}
         {activeTab === "members" && !isMember && <MembersTab />}
         {activeTab === "invitations" && !isMember && <InvitationsTab />}
