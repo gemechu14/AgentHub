@@ -549,19 +549,19 @@ export default function EmbedWidgetPage() {
         </div>
       )}
 
-      {/* Input Area - input/suggestions use surface, border uses border */}
+      {/* Input Area - input/suggestions use background, border uses border */}
       <div 
         className="border-t p-4 flex-shrink-0"
         style={{ 
           borderColor: theme.border,
-          backgroundColor: theme.surface,
+          backgroundColor: theme.background,
         }}
       >
         <div 
           className="flex items-end gap-2 rounded-lg border"
           style={{ 
             borderColor: theme.border,
-            backgroundColor: theme.surface,
+            backgroundColor: theme.background,
           }}
         >
           <textarea

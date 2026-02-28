@@ -441,44 +441,46 @@ export function EmbedConfigDocs() {
 
       {/* Theme Customization Section */}
       {credential && (
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 shadow-lg overflow-hidden">
           {/* Header - Toggle Button */}
           <button
             onClick={() => setIsThemeOpen(!isThemeOpen)}
-            className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors"
+            className="w-full flex items-center justify-between p-6 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white transition-all duration-200 group"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg">
-                <Palette className="w-5 h-5 text-slate-700" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-slate-600 shadow-md group-hover:bg-slate-900 group-hover:shadow-lg transition-all">
+                <Palette className="w-6 h-6 text-white" />
               </div>
               <div className="text-left">
-                <h3 className="text-lg font-semibold text-slate-900">Theme Customization</h3>
-                <p className="text-sm text-slate-600">Customize the appearance of your embed widget</p>
+                <h3 className="text-xl font-bold text-slate-900 group-hover:text-black transition-colors">Theme Customization</h3>
+                <p className="text-sm text-slate-600 mt-0.5">Customize the appearance of your embed widget</p>
               </div>
             </div>
-            {isThemeOpen ? (
-              <ChevronUp className="w-5 h-5 text-slate-500" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-slate-500" />
-            )}
+            <div className="p-2 rounded-lg bg-slate-100 group-hover:bg-slate-200 transition-colors">
+              {isThemeOpen ? (
+                <ChevronUp className="w-5 h-5 text-slate-600" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-slate-600" />
+              )}
+            </div>
           </button>
 
           {/* Collapsible Content */}
           {isThemeOpen && (
-            <div className="px-6 pb-6 space-y-6 border-t border-slate-200">
+            <div className="px-6 pb-6 space-y-6 border-t border-slate-200 bg-white">
               {/* Theme Success Message */}
               {themeSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
                   <Check className="w-4 h-4 text-green-600" />
-                  <p className="text-sm text-green-800">Theme updated successfully!</p>
+                  <p className="text-sm text-green-800 font-medium">Theme updated successfully!</p>
                 </div>
               )}
 
               {/* Theme Error Message */}
               {themeError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
                   <AlertCircle className="w-4 h-4 text-red-600" />
-                  <p className="text-sm text-red-800">{themeError}</p>
+                  <p className="text-sm text-red-800 font-medium">{themeError}</p>
                   <button
                     onClick={() => setThemeError(null)}
                     className="ml-auto p-1 rounded-md text-red-600 hover:bg-red-100 transition-colors"
@@ -488,240 +490,251 @@ export function EmbedConfigDocs() {
                 </div>
               )}
 
-              {/* Theme Color Picker Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Primary */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Primary Color
-                    <span className="ml-2 text-xs text-slate-500">(Header, Launcher, User Messages)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.primary}
-                        onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
+              {/* Main Layout: Controls on Left, Preview on Right */}
+              <div className="flex flex-col lg:flex-row lg:gap-[256px] gap-6">
+                {/* Left Side - Color Controls */}
+                <div className="lg:flex-[0_0_50%] space-y-2">
+                  <div className="mb-2 mt-4">
+                    <h4 className="text-sm font-bold text-slate-900">Color Settings</h4>
+                  </div>
+                  
+                  {/* Theme Color Picker Grid */}
+                  <div className="space-y-2">
+                    {/* Primary */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Primary
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(Header, Messages)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.primary}
+                            onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.primary}
+                            onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#0F172A"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.primary }}
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.primary}
-                        onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#0F172A"
-                      />
+
+                    {/* Accent */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Accent
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(Buttons, Interactive)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.accent}
+                            onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.accent}
+                            onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#3B82F6"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.accent }}
+                        />
+                      </div>
                     </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.primary }}
-                    />
+
+                    {/* Background */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Background
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(Chat Body)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.background}
+                            onChange={(e) => setTheme({ ...theme, background: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.background}
+                            onChange={(e) => setTheme({ ...theme, background: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#F8FAFC"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.background }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Surface */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Surface
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(Cards, Input)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.surface}
+                            onChange={(e) => setTheme({ ...theme, surface: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.surface}
+                            onChange={(e) => setTheme({ ...theme, surface: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#FFFFFF"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.surface }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Text Primary */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Text Primary
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(All Text)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.textPrimary}
+                            onChange={(e) => setTheme({ ...theme, textPrimary: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.textPrimary}
+                            onChange={(e) => setTheme({ ...theme, textPrimary: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#0F172A"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.textPrimary }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Border */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Border
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(Dividers, Borders)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.border}
+                            onChange={(e) => setTheme({ ...theme, border: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.border}
+                            onChange={(e) => setTheme({ ...theme, border: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#E2E8F0"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.border }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Success */}
+                    <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-300 transition-colors">
+                      <label className="block text-xs font-semibold text-slate-800">
+                        Success
+                        <span className="ml-1.5 text-xs font-normal text-slate-500">(Online Status)</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={theme.success}
+                            onChange={(e) => setTheme({ ...theme, success: e.target.value })}
+                            className="w-12 h-10 rounded-lg border-2 border-slate-300 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={theme.success}
+                            onChange={(e) => setTheme({ ...theme, success: e.target.value })}
+                            className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                            placeholder="#22C55E"
+                          />
+                        </div>
+                        <div
+                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
+                          style={{ backgroundColor: theme.success }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Accent */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Accent Color
-                    <span className="ml-2 text-xs text-slate-500">(Send Button, Interactive States)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.accent}
-                        onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
+                {/* Right Side - Live Preview */}
+                <div className="lg:flex-[0_0_50%] lg:sticky lg:top-6 lg:self-start">
+                  <div className="flex flex-col items-start lg:items-start">
+                    {/* Title outside widget */}
+                    <div className="mb-2 mt-4 text-left w-full max-w-[400px]">
+                      <h4 className="text-base font-bold text-slate-900 mb-0.5">Live Preview</h4>
+                      <p className="text-xs text-slate-500">See your changes in real-time</p>
                     </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.accent}
-                        onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#3B82F6"
-                      />
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.accent }}
-                    />
-                  </div>
-                </div>
-
-                {/* Background */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Background Color
-                    <span className="ml-2 text-xs text-slate-500">(Chat Body)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.background}
-                        onChange={(e) => setTheme({ ...theme, background: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.background}
-                        onChange={(e) => setTheme({ ...theme, background: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#F8FAFC"
-                      />
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.background }}
-                    />
-                  </div>
-                </div>
-
-                {/* Surface */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Surface Color
-                    <span className="ml-2 text-xs text-slate-500">(Cards, Input, Suggestions)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.surface}
-                        onChange={(e) => setTheme({ ...theme, surface: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.surface}
-                        onChange={(e) => setTheme({ ...theme, surface: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#FFFFFF"
-                      />
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.surface }}
-                    />
-                  </div>
-                </div>
-
-                {/* Text Primary */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Text Primary Color
-                    <span className="ml-2 text-xs text-slate-500">(All Text)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.textPrimary}
-                        onChange={(e) => setTheme({ ...theme, textPrimary: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.textPrimary}
-                        onChange={(e) => setTheme({ ...theme, textPrimary: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#0F172A"
-                      />
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.textPrimary }}
-                    />
-                  </div>
-                </div>
-
-                {/* Border */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Border Color
-                    <span className="ml-2 text-xs text-slate-500">(Dividers, Input Borders)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.border}
-                        onChange={(e) => setTheme({ ...theme, border: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.border}
-                        onChange={(e) => setTheme({ ...theme, border: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#E2E8F0"
-                      />
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.border }}
-                    />
-                  </div>
-                </div>
-
-                {/* Success */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Success Color
-                    <span className="ml-2 text-xs text-slate-500">(Online Status)</span>
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={theme.success}
-                        onChange={(e) => setTheme({ ...theme, success: e.target.value })}
-                        className="w-16 h-12 rounded-lg border-2 border-slate-300 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={theme.success}
-                        onChange={(e) => setTheme({ ...theme, success: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#22C55E"
-                      />
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded-lg border-2 border-slate-300 shadow-sm"
-                      style={{ backgroundColor: theme.success }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Live Preview */}
-              <div className="border-t border-slate-200 pt-6">
-                <h4 className="text-sm font-semibold text-slate-900 mb-4">Live Preview</h4>
-                <div className="flex justify-center">
-                  {/* Chat Widget Container */}
-                  <div 
-                    className="w-[400px] h-[600px] flex flex-col overflow-hidden rounded-2xl shadow-2xl"
-                    style={{ 
-                      backgroundColor: theme.surface,
-                      borderColor: theme.border,
-                      borderWidth: "1px",
-                      borderStyle: "solid",
-                    }}
-                  >
+                    {/* Chat Widget Container */}
+                    <div 
+                      className="w-full max-w-[400px] h-[600px] flex flex-col overflow-hidden rounded-2xl shadow-2xl border-2"
+                      style={{ 
+                        backgroundColor: theme.surface,
+                        borderColor: theme.border,
+                      }}
+                    >
                     {/* Header */}
                     <div
                       className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b"
@@ -825,14 +838,14 @@ export function EmbedConfigDocs() {
                       className="border-t px-4 py-4 flex-shrink-0"
                       style={{ 
                         borderColor: theme.border,
-                        backgroundColor: theme.surface,
+                        backgroundColor: theme.background,
                       }}
                     >
                       <div 
                         className="flex items-end gap-2 rounded-lg border"
                         style={{ 
                           borderColor: theme.border,
-                          backgroundColor: theme.surface,
+                          backgroundColor: theme.background,
                         }}
                       >
                         <textarea
@@ -856,6 +869,7 @@ export function EmbedConfigDocs() {
                           </svg>
                         </button>
                       </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -865,7 +879,7 @@ export function EmbedConfigDocs() {
               <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                 <button
                   onClick={handleResetTheme}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all shadow-sm hover:shadow-md"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Reset to Default
@@ -873,7 +887,7 @@ export function EmbedConfigDocs() {
                 <button
                   onClick={handleSaveTheme}
                   disabled={isSavingTheme}
-                  className="inline-flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className={`w-4 h-4 ${isSavingTheme ? 'animate-pulse' : ''}`} />
                   <span>{isSavingTheme ? 'Saving...' : 'Save Theme'}</span>

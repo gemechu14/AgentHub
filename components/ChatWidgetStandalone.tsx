@@ -244,11 +244,11 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
             </div>
           )}
 
-          {/* Input Area - input/suggestions use surface, border uses border */}
+          {/* Input Area - input/suggestions use background, border uses border */}
           <div style={{
             padding: '12px',
             borderTop: `1px solid ${theme.border}`,
-            backgroundColor: theme.surface,
+            backgroundColor: theme.background,
             flexShrink: 0
           }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
@@ -271,7 +271,7 @@ export default function ChatWidgetStandalone({ token, agentId, agentName = "Chat
                   padding: '8px 12px',
                   fontSize: '14px',
                   outline: 'none',
-                  backgroundColor: theme.surface,
+                  backgroundColor: theme.background,
                   color: theme.textPrimary,
                 }}
                 onFocus={(e) => {
