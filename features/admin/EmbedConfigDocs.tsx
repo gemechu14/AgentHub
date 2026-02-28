@@ -524,10 +524,6 @@ export function EmbedConfigDocs() {
                             placeholder="#0F172A"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.primary }}
-                        />
                       </div>
                     </div>
 
@@ -555,10 +551,6 @@ export function EmbedConfigDocs() {
                             placeholder="#3B82F6"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.accent }}
-                        />
                       </div>
                     </div>
 
@@ -586,10 +578,6 @@ export function EmbedConfigDocs() {
                             placeholder="#F8FAFC"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.background }}
-                        />
                       </div>
                     </div>
 
@@ -617,10 +605,6 @@ export function EmbedConfigDocs() {
                             placeholder="#FFFFFF"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.surface }}
-                        />
                       </div>
                     </div>
 
@@ -648,10 +632,6 @@ export function EmbedConfigDocs() {
                             placeholder="#0F172A"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.textPrimary }}
-                        />
                       </div>
                     </div>
 
@@ -679,10 +659,6 @@ export function EmbedConfigDocs() {
                             placeholder="#E2E8F0"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.border }}
-                        />
                       </div>
                     </div>
 
@@ -710,10 +686,6 @@ export function EmbedConfigDocs() {
                             placeholder="#22C55E"
                           />
                         </div>
-                        <div
-                          className="w-10 h-10 rounded-lg border-2 border-slate-300 shadow-sm"
-                          style={{ backgroundColor: theme.success }}
-                        />
                       </div>
                     </div>
                   </div>
