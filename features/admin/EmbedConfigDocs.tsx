@@ -38,19 +38,19 @@ function CodeBlock({ code, label, copyValue }: CodeBlockProps) {
           {label}
         </label>
       )}
-      <div className="flex items-center gap-2 bg-slate-900 rounded-lg p-3 pr-10">
-        <code className="flex-1 text-sm font-mono text-slate-100 break-all">
+      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2 md:p-3 pr-8 md:pr-10">
+        <code className="flex-1 text-xs md:text-sm font-mono text-slate-900 break-all">
           {code}
         </code>
         <button
           onClick={handleCopy}
-          className="absolute right-3 p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white transition-colors"
+          className="absolute right-2 md:right-3 p-1 md:p-1.5 rounded-md bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition-colors"
           title="Copy"
         >
           {isCopied ? (
-            <Check className="w-4 h-4" />
+            <Check className="w-3.5 h-3.5 md:w-4 md:h-4" />
           ) : (
-            <Copy className="w-4 h-4" />
+            <Copy className="w-3.5 h-3.5 md:w-4 md:h-4" />
           )}
         </button>
       </div>
@@ -274,20 +274,20 @@ export function EmbedConfigDocs() {
   const selectedAgent = agents?.find((a) => a.id === selectedAgentId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-xl md:text-2xl font-bold text-slate-900">
           Embed Configuration
         </h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-xs md:text-sm text-slate-600">
           Generate embed code to add the chatbot to your website.
         </p>
       </div>
 
       {/* Agent Selection */}
-      <div className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-lg border border-slate-200 p-3 md:p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <label className="block text-sm font-semibold text-slate-900">
             Select Agent
           </label>
@@ -296,11 +296,7 @@ export function EmbedConfigDocs() {
             <button
               onClick={handleToggleStatus}
               disabled={isToggling}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                credential.is_active
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-              }`}
+              className="inline-flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               title={credential.is_active ? "Disable embed" : "Enable embed"}
             >
               <RefreshCw className={`w-4 h-4 ${isToggling ? 'animate-spin' : ''}`} />
@@ -363,11 +359,11 @@ export function EmbedConfigDocs() {
 
       {/* Generate Embed URL Button - Only show when no embed URL exists */}
       {selectedAgentId && !embedUrl && (
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-3 md:p-4">
           <button
             onClick={handleGenerateEmbed}
             disabled={isGeneratingEmbed || isToggling || (credential ? !credential.is_active : false)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             title={credential && !credential.is_active ? "Enable embed first to generate URL" : "Generate embed URL"}
           >
             <Link2 className={`w-4 h-4 ${isGeneratingEmbed ? 'animate-pulse' : ''}`} />
@@ -388,15 +384,15 @@ export function EmbedConfigDocs() {
           {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-              className="relative w-full max-w-md rounded-2xl bg-white shadow-xl"
+              className="relative w-full max-w-md rounded-xl md:rounded-2xl bg-white shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Content */}
-              <div className="px-6 pt-6 pb-4">
-                <h2 className="mb-2 text-lg font-semibold text-slate-900">
+              <div className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
+                <h2 className="mb-2 text-base md:text-lg font-semibold text-slate-900">
                   Regenerating Embed URL
                 </h2>
-                <p className="mb-1 text-sm text-slate-600">
+                <p className="mb-1 text-xs md:text-sm text-slate-600">
                   The previous token will stop working.
                 </p>
                 <p className="mb-0 text-xs text-slate-500">
@@ -408,18 +404,18 @@ export function EmbedConfigDocs() {
               <div className="border-t border-slate-200"></div>
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-3 px-6 py-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 px-4 md:px-6 py-3 md:py-4">
                 <button
                   onClick={() => setShowRegenerateWarning(false)}
                   disabled={isGeneratingEmbed}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs md:text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmRegenerate}
                   disabled={isGeneratingEmbed}
-                  className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
+                  className="rounded-lg bg-slate-600 px-4 py-2 text-xs md:text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-50"
                 >
                   {isGeneratingEmbed ? "Regenerating..." : "Yes, Regenerate"}
                 </button>
@@ -445,15 +441,15 @@ export function EmbedConfigDocs() {
           {/* Header - Toggle Button */}
           <button
             onClick={() => setIsThemeOpen(!isThemeOpen)}
-            className="w-full flex items-center justify-between p-6 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white transition-all duration-200 group"
+            className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-gradient-to-r hover:from-slate-50 hover:to-white transition-all duration-200 group"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-slate-600 shadow-md group-hover:bg-slate-900 group-hover:shadow-lg transition-all">
-                <Palette className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-slate-600 shadow-md group-hover:bg-slate-900 group-hover:shadow-lg transition-all">
+                <Palette className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               <div className="text-left">
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-black transition-colors">Theme Customization</h3>
-                <p className="text-sm text-slate-600 mt-0.5">Customize the appearance of your embed widget</p>
+                <h3 className="text-base md:text-xl font-bold text-slate-900 group-hover:text-black transition-colors">Theme Customization</h3>
+                <p className="text-xs md:text-sm text-slate-600 mt-0.5">Customize the appearance of your embed widget</p>
               </div>
             </div>
             <div className="p-2 rounded-lg bg-slate-100 group-hover:bg-slate-200 transition-colors">
@@ -467,7 +463,7 @@ export function EmbedConfigDocs() {
 
           {/* Collapsible Content */}
           {isThemeOpen && (
-            <div className="px-6 pb-6 space-y-6 border-t border-slate-200 bg-white">
+            <div className="px-4 md:px-6 pb-4 md:pb-6 space-y-4 md:space-y-6 border-t border-slate-200 bg-white">
               {/* Theme Success Message */}
               {themeSuccess && (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
@@ -491,11 +487,11 @@ export function EmbedConfigDocs() {
               )}
 
               {/* Main Layout: Controls on Left, Preview on Right */}
-              <div className="flex flex-col lg:flex-row lg:gap-[256px] gap-6">
+              <div className="flex flex-col lg:flex-row lg:gap-16 xl:gap-32 gap-6">
                 {/* Left Side - Color Controls */}
                 <div className="lg:flex-[0_0_50%] space-y-2">
-                  <div className="mb-2 mt-4">
-                    <h4 className="text-sm font-bold text-slate-900">Color Settings</h4>
+                  <div className="mb-2 mt-2 md:mt-4">
+                    <h4 className="text-xs md:text-sm font-bold text-slate-900">Color Settings</h4>
                   </div>
                   
                   {/* Theme Color Picker Grid */}
@@ -723,13 +719,13 @@ export function EmbedConfigDocs() {
                 <div className="lg:flex-[0_0_50%] lg:sticky lg:top-6 lg:self-start">
                   <div className="flex flex-col items-start lg:items-start">
                     {/* Title outside widget */}
-                    <div className="mb-2 mt-4 text-left w-full max-w-[400px]">
-                      <h4 className="text-base font-bold text-slate-900 mb-0.5">Live Preview</h4>
+                    <div className="mb-2 mt-2 md:mt-4 text-left w-full max-w-full lg:max-w-[400px]">
+                      <h4 className="text-sm md:text-base font-bold text-slate-900 mb-0.5">Live Preview</h4>
                       <p className="text-xs text-slate-500">See your changes in real-time</p>
                     </div>
                     {/* Chat Widget Container */}
                     <div 
-                      className="w-full max-w-[400px] h-[600px] flex flex-col overflow-hidden rounded-2xl shadow-2xl border-2"
+                      className="w-full max-w-full lg:max-w-[400px] h-[500px] md:h-[600px] flex flex-col overflow-hidden rounded-xl md:rounded-2xl shadow-xl md:shadow-2xl border-2"
                       style={{ 
                         backgroundColor: theme.surface,
                         borderColor: theme.border,
@@ -876,18 +872,18 @@ export function EmbedConfigDocs() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-200">
                 <button
                   onClick={handleResetTheme}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all shadow-sm hover:shadow-md"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-slate-700 bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all shadow-sm hover:shadow-md"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  Reset to Default
+                  <span className="whitespace-nowrap">Reset to Default</span>
                 </button>
                 <button
                   onClick={handleSaveTheme}
                   disabled={isSavingTheme}
-                  className="inline-flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg text-xs md:text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className={`w-4 h-4 ${isSavingTheme ? 'animate-pulse' : ''}`} />
                   <span>{isSavingTheme ? 'Saving...' : 'Save Theme'}</span>
@@ -900,7 +896,7 @@ export function EmbedConfigDocs() {
 
       {/* Embed URL Success - Only show if credential exists and embedUrl is set */}
       {embedUrl && credential && (
-        <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4 md:p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-slate-100 rounded-lg text-slate-700">
@@ -937,7 +933,7 @@ export function EmbedConfigDocs() {
                 onClick={() => {
                   window.open(embedUrl, '_blank');
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs md:text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors w-full sm:w-auto"
               >
                 <Link2 className="w-4 h-4" />
                 <span>Test in New Tab</span>
@@ -960,7 +956,7 @@ export function EmbedConfigDocs() {
           <button
             onClick={handleGenerateEmbed}
             disabled={isGeneratingEmbed || isToggling || (credential ? !credential.is_active : false)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             title={credential && !credential.is_active ? "Enable embed first to regenerate URL" : "Regenerate embed URL"}
           >
             <RefreshCw className={`w-4 h-4 ${isGeneratingEmbed ? 'animate-spin' : ''}`} />
