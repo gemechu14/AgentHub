@@ -9,6 +9,7 @@ import { APP_NAME } from "@/lib/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChatNavSection } from "@/components/layout/ChatNavSection";
 import { useChatContext } from "@/contexts/ChatContext";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 
 interface AppShellProps {
   children: ReactNode;
@@ -22,16 +23,19 @@ function NavItem({
   icon,
   isActive,
   isCollapsed,
+  onNavigate,
 }: {
   href: string;
   label: string;
   icon: ReactNode;
   isActive: boolean;
   isCollapsed: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
         isActive
           ? "bg-blue-500/20 text-blue-400"
@@ -69,6 +73,7 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const { user, logout, isLoading: authLoading } = useAuth();
+  const { isMobileMenuOpen, openMobileMenu, closeMobileMenu } = useMobileMenu();
 
   // Read selectedAgent from context (state lives in ChatStateProvider)
   const { selectedAgent } = useChatContext();
@@ -80,7 +85,6 @@ export function AppShell({
     }
     return false;
   });
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Persist sidebar collapse state
   useEffect(() => {
@@ -92,6 +96,7 @@ export function AppShell({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const { menuJustOpenedRef } = useMobileMenu();
 
   // Get user display data
   const userInitials = getUserInitials(user);
@@ -114,6 +119,17 @@ export function AppShell({
     }
   }, [isProfileMenuOpen, isCollapsed]);
 
+  // Close mobile menu when pathname changes (but not on initial mount)
+  const prevPathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      closeMobileMenu();
+    } else {
+      prevPathnameRef.current = pathname;
+    }
+  }, [pathname, closeMobileMenu]);
+
   return (
     <div className="h-screen bg-slate-100 overflow-hidden">
       <div className="flex h-screen">
@@ -121,7 +137,16 @@ export function AppShell({
         {isMobileMenuOpen && (
           <div
             className="fixed inset-0 z-40 bg-slate-900/80 md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={(e) => {
+              // Prevent closing if menu was just opened (to avoid immediate close)
+              if (menuJustOpenedRef.current) {
+                return;
+              }
+              // Only close if clicking directly on the overlay, not if event came from sidebar
+              if (e.target === e.currentTarget) {
+                closeMobileMenu();
+              }
+            }}
           />
         )}
 
@@ -175,6 +200,7 @@ export function AppShell({
                 icon={<Settings className="w-5 h-5" />}
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={isCollapsed}
+                onNavigate={closeMobileMenu}
               />
               {!isMember && (
                 <NavItem
@@ -183,6 +209,7 @@ export function AppShell({
                   icon={<Shield className="w-5 h-5" />}
                   isActive={pathname.startsWith("/admin")}
                   isCollapsed={isCollapsed}
+                  onNavigate={closeMobileMenu}
                 />
               )}
               <div className="relative overflow-visible">
@@ -212,6 +239,7 @@ export function AppShell({
           className={`fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-slate-800/50 bg-[#0d1321] transition-transform duration-300 md:hidden ${
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex h-16 items-center justify-between border-b border-slate-800/50 px-4">
             <div className="flex items-center gap-2">
@@ -223,7 +251,7 @@ export function AppShell({
               </span>
             </div>
             <button
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
               className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
               aria-label="Close menu"
             >
@@ -246,6 +274,7 @@ export function AppShell({
                 icon={<Settings className="w-5 h-5" />}
                 isActive={pathname.startsWith("/settings")}
                 isCollapsed={false}
+                onNavigate={closeMobileMenu}
               />
               {!isMember && (
                 <NavItem
@@ -254,6 +283,7 @@ export function AppShell({
                   icon={<Shield className="w-5 h-5" />}
                   isActive={pathname.startsWith("/admin")}
                   isCollapsed={false}
+                  onNavigate={closeMobileMenu}
                 />
               )}
               <div className="relative">
@@ -291,7 +321,10 @@ export function AppShell({
                       <div className="py-1">
                         <Link
                           href="/settings"
-                          onClick={() => setIsProfileMenuOpen(false)}
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            closeMobileMenu();
+                          }}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-slate-700/50 transition-colors"
                         >
                           <User className="w-4 h-4" />
@@ -321,7 +354,10 @@ export function AppShell({
             <header className="flex-shrink-0 border-b border-slate-200 px-4 py-4 md:px-10">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setIsMobileMenuOpen(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openMobileMenu();
+                  }}
                   className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
                   aria-label="Open menu"
                 >
@@ -373,7 +409,10 @@ export function AppShell({
             <div className="py-1">
               <Link
                 href="/settings"
-                onClick={() => setIsProfileMenuOpen(false)}
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  closeMobileMenu();
+                }}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-slate-700/50 transition-colors rounded-md mx-1"
               >
                 <User className="w-4 h-4" />
@@ -382,6 +421,7 @@ export function AppShell({
               <button
                 onClick={() => {
                   setIsProfileMenuOpen(false);
+                  closeMobileMenu();
                   logout();
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700/50 transition-colors rounded-md mx-1"

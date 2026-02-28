@@ -119,65 +119,126 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-separate border-spacing-0 text-sm">
-          <thead>
-            <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Integration</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {agents.map((agent) => {
-              const extendedAgent = agent as ExtendedAgent;
-              const isActive = agent.status === "active";
-              const isDeleting = deletingId === agent.id;
-              
-              return (
-                <tr key={agent.id} className="border-t border-slate-200 hover:bg-slate-50/50">
-                  <td className="px-4 py-4 align-top">
-                    <span className="font-semibold text-slate-900">{agent.name}</span>
-                  </td>
-                  <td className="px-4 py-4 align-top">
+    <>
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {agents.map((agent) => {
+          const extendedAgent = agent as ExtendedAgent;
+          const isActive = agent.status === "active";
+          const isDeleting = deletingId === agent.id;
+          
+          return (
+            <div
+              key={agent.id}
+              className="bg-slate-50 rounded-lg border border-slate-200 p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-slate-900 mb-2 break-words">
+                    {agent.name}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="default">{getTypeLabel(extendedAgent.type)}</Badge>
-                  </td>
-                  <td className="px-4 py-4 align-top">
                     <Badge variant={isActive ? "success" : "default"}>
                       {isActive ? "Active" : agent.status === "draft" ? "Draft" : "Inactive"}
                     </Badge>
-                  </td>
-                  <td className="px-4 py-4 align-top text-slate-600">
-                    {getIntegrationLabel(agent.connection_type)}
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <div className="flex items-center justify-end gap-3">
-                      <button
-                        onClick={() => handleEdit(agent.id)}
-                        className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                        title="Edit agent"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(agent.id)}
-                        disabled={isDeleting}
-                        className="p-1.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Delete agent"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  </div>
+                </div>
+                <div className="ml-2 flex items-center gap-2">
+                  <button
+                    onClick={() => handleEdit(agent.id)}
+                    className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                    title="Edit agent"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(agent.id)}
+                    disabled={isDeleting}
+                    className="p-1.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Delete agent"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Integration - Always visible on mobile */}
+              <div className="pt-2 border-t border-slate-200">
+                <div className="text-xs font-semibold text-slate-700 mb-1">
+                  Integration:
+                </div>
+                <div className="text-xs text-slate-600">
+                  {getIntegrationLabel(agent.connection_type)}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-0 text-sm">
+            <thead>
+              <tr className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-3 md:px-4 py-2.5 md:py-3">Name</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3">Type</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3">Status</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3">Integration</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {agents.map((agent) => {
+                const extendedAgent = agent as ExtendedAgent;
+                const isActive = agent.status === "active";
+                const isDeleting = deletingId === agent.id;
+                
+                return (
+                  <tr key={agent.id} className="border-t border-slate-200 hover:bg-slate-50/50">
+                    <td className="px-3 md:px-4 py-3 md:py-4 align-top">
+                      <span className="font-semibold text-slate-900 text-xs md:text-sm">{agent.name}</span>
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 align-top">
+                      <Badge variant="default">{getTypeLabel(extendedAgent.type)}</Badge>
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 align-top">
+                      <Badge variant={isActive ? "success" : "default"}>
+                        {isActive ? "Active" : agent.status === "draft" ? "Draft" : "Inactive"}
+                      </Badge>
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 align-top text-slate-600 text-xs md:text-sm">
+                      {getIntegrationLabel(agent.connection_type)}
+                    </td>
+                    <td className="px-3 md:px-4 py-3 md:py-4 align-top">
+                      <div className="flex items-center justify-end gap-2 md:gap-3">
+                        <button
+                          onClick={() => handleEdit(agent.id)}
+                          className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          title="Edit agent"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(agent.id)}
+                          disabled={isDeleting}
+                          className="p-1.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete agent"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <DeleteAgentModal
         isOpen={deleteModalState.isOpen}
         agentName={deleteModalState.agentName}
@@ -185,7 +246,7 @@ export function AdminAgentsTable({ agents }: AdminAgentsTableProps) {
         onConfirm={handleConfirmDelete}
         isDeleting={!!deletingId}
       />
-    </div>
+    </>
   );
 }
 

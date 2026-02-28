@@ -28,15 +28,15 @@ export function DeleteAgentModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="relative w-full max-w-md rounded-2xl bg-white shadow-xl"
+          className="relative w-full max-w-md rounded-xl md:rounded-2xl bg-white shadow-xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Content */}
-          <div className="px-6 pt-6 pb-4">
-            <h2 className="mb-2 text-lg font-semibold text-slate-900">
+          <div className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">
+            <h2 className="mb-2 text-base md:text-lg font-semibold text-slate-900">
               Delete agent?
             </h2>
-            <p className="mb-1 text-sm text-slate-600">
+            <p className="mb-1 text-xs md:text-sm text-slate-600">
               This will delete <strong>{agentName}</strong>.
             </p>
             <p className="mb-0 text-xs text-slate-500">
@@ -48,18 +48,18 @@ export function DeleteAgentModal({
           <div className="border-t border-slate-200"></div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 px-4 md:px-6 py-3 md:py-4">
             <button
               onClick={onClose}
               disabled={isDeleting}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs md:text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
               disabled={isDeleting}
-              className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+              className="rounded-lg bg-red-500 px-4 py-2 text-xs md:text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </button>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ChatStateProvider } from "@/contexts/ChatStateProvider";
+import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
         <AuthProvider>
           <AuthGuard>
             <ChatStateProvider>
-              {children}
+              <MobileMenuProvider>
+                {children}
+              </MobileMenuProvider>
             </ChatStateProvider>
           </AuthGuard>
         </AuthProvider>

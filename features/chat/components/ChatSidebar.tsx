@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, memo } from "react";
 import { FileText, NotebookPen, Trash2, Pencil } from "lucide-react";
 import type { ChatOut } from "@/types/chat";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 
 interface ChatSidebarProps {
   chats: ChatOut[];
@@ -27,6 +28,7 @@ function ChatSidebarComponent({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { closeMobileMenu } = useMobileMenu();
   
   // Preserve scroll position
   useEffect(() => {
@@ -68,7 +70,10 @@ function ChatSidebarComponent({
       {/* New Chat Button */}
       <div className="flex-shrink-0 px-2 pt-2 pb-2">
         <button
-          onClick={onNewChat}
+          onClick={() => {
+            onNewChat();
+            closeMobileMenu();
+          }}
           className="w-full flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-400"
         >
           <NotebookPen className="h-4 w-4" />
@@ -120,7 +125,10 @@ function ChatSidebarComponent({
                 ) : (
                   <>
                     <button
-                      onClick={() => onSelectChat(chat.id)}
+                      onClick={() => {
+                        onSelectChat(chat.id);
+                        closeMobileMenu();
+                      }}
                       className="flex-1 truncate text-left"
                     >
                       {chat.title}

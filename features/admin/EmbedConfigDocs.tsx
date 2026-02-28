@@ -296,7 +296,11 @@ export function EmbedConfigDocs() {
             <button
               onClick={handleToggleStatus}
               disabled={isToggling}
-              className="inline-flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-white bg-slate-600 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+              className={`inline-flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-semibold text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto ${
+                credential.is_active
+                  ? 'bg-slate-600 hover:bg-slate-700'
+                  : 'bg-blue-500 hover:bg-blue-400'
+              }`}
               title={credential.is_active ? "Disable embed" : "Enable embed"}
             >
               <RefreshCw className={`w-4 h-4 ${isToggling ? 'animate-spin' : ''}`} />

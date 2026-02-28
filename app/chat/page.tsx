@@ -9,6 +9,8 @@ import { ChatMessage } from "@/features/chat/components/ChatMessage";
 import { MessageInput } from "@/features/chat/components/MessageInput";
 import { AgentSelector } from "@/features/chat/components/AgentSelector";
 import { ThinkingIndicator } from "@/features/chat/components/ThinkingIndicator";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import { Menu } from "lucide-react";
 
 function ChatContent() {
   const router = useRouter();
@@ -73,10 +75,22 @@ function ChatContent() {
   // Use all agents (no filtering)
   const chatAgents = agents || [];
 
+  const { openMobileMenu } = useMobileMenu();
+
   return (
     <div className="flex flex-1 flex-col h-full">
         {/* Top Bar */}
         <div className="flex items-center gap-4 bg-white px-4 py-3 border-b border-slate-200">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              openMobileMenu();
+            }}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors flex-shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <AgentSelector
             agents={chatAgents}
             selectedAgent={selectedAgent}

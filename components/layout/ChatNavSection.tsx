@@ -4,6 +4,7 @@ import { memo, useCallback } from "react";
 import { NotebookPen } from "lucide-react";
 import { ChatSidebar } from "@/features/chat/components/ChatSidebar";
 import { useChatContext } from "@/contexts/ChatContext";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 
 interface ChatNavSectionProps {
   isCollapsed: boolean;
@@ -21,15 +22,18 @@ const ChatNavSectionComponent = ({ isCollapsed }: ChatNavSectionProps) => {
     handleRenameChat,
     isLoading,
   } = useChatContext();
+  const { closeMobileMenu } = useMobileMenu();
 
   // Handlers are already stable from context, but wrap them to ensure they never change
   const onNewChat = useCallback(() => {
     handleNewChat();
-  }, [handleNewChat]);
+    closeMobileMenu();
+  }, [handleNewChat, closeMobileMenu]);
   
   const onSelectChat = useCallback((chatId: string) => {
     handleSelectChat(chatId);
-  }, [handleSelectChat]);
+    closeMobileMenu();
+  }, [handleSelectChat, closeMobileMenu]);
   
   const onDeleteChat = useCallback((chatId: string) => {
     handleDeleteChat(chatId);
@@ -43,7 +47,10 @@ const ChatNavSectionComponent = ({ isCollapsed }: ChatNavSectionProps) => {
     return (
       <div className="flex-1 flex flex-col items-center pt-2">
         <button
-          onClick={onNewChat}
+          onClick={() => {
+            onNewChat();
+            closeMobileMenu();
+          }}
           className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500 text-white transition-colors hover:bg-blue-400"
           title="New Chat"
         >
